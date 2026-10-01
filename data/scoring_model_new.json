@@ -1,0 +1,155 @@
+{
+  "_comment": "The complete scoring + simulation model behind the platform. All formulas match the mockup exactly. Arsenal Score is a weighted sum of four pillars, each normalized to 0-100.",
+
+  "arsenal_score": {
+    "formula": "arsenal_score = Σ ( normalized_pillar_score × pillar_weight )",
+    "range": [0, 100],
+    "pillars": [
+      {
+        "id": "surge_capacity",
+        "name": "Surge Capacity",
+        "prime_weight": 0.30,
+        "subcontractor_weight": 0.35,
+        "raw_max": 70,
+        "orientation": "higher_is_better",
+        "criteria": [
+          {"name": "Production Line Flexibility", "max": 10},
+          {"name": "Workforce Scalability", "max": 10},
+          {"name": "Material Stockpile Depth", "max": 10},
+          {"name": "Technology-Enabled Ramp", "max": 10},
+          {"name": "Facility Headroom", "max": 10},
+          {"name": "Historical Surge Performance", "max": 10},
+          {"name": "Subtier Surge Readiness", "max": 10}
+        ]
+      },
+      {
+        "id": "investment_quality",
+        "name": "Investment Quality",
+        "prime_weight": 0.20,
+        "subcontractor_weight": 0.25,
+        "raw_max": 50,
+        "orientation": "higher_is_better",
+        "criteria": [
+          {"name": "Investor Strategic Alignment", "max": 15},
+          {"name": "Capital Patience", "max": 10},
+          {"name": "Allied-Nation Capital", "max": 10},
+          {"name": "Adversary Capital Absence", "max": 15}
+        ]
+      },
+      {
+        "id": "america_score",
+        "name": "America Score",
+        "prime_weight": 0.25,
+        "subcontractor_weight": 0.20,
+        "raw_max": 50,
+        "orientation": "higher_is_better",
+        "criteria": [
+          {"name": "Domestic Job Creation", "max": 15},
+          {"name": "Supply-Chain Domesticity", "max": 15},
+          {"name": "US-Origin Investment", "max": 10},
+          {"name": "Veteran Employment", "max": 5},
+          {"name": "STEM / Apprenticeship Programs", "max": 5}
+        ]
+      },
+      {
+        "id": "adversary_exposure",
+        "name": "Adversary Exposure",
+        "prime_weight": 0.25,
+        "subcontractor_weight": 0.20,
+        "raw_max": 100,
+        "orientation": "inverse_higher_is_better",
+        "note": "Scored inversely: a HIGH pillar score means LOW exposure (good). Start at 100 and subtract penalties. In the rankings UI, a low score renders with more red fill.",
+        "penalties": [
+          {"name": "Current Chinese Ownership/Control", "penalty_up_to": 40},
+          {"name": "Chinese Supply-Chain Dependency", "penalty_up_to": 30},
+          {"name": "Historical Chinese Ties", "penalty_up_to": 15},
+          {"name": "Chinese Capital in Cap Table", "penalty_up_to": 10},
+          {"name": "Other Adversary Exposure (RU/IR/KP)", "penalty_up_to": 15}
+        ]
+      }
+    ],
+    "worked_example_prime": {
+      "raw_scores": {"surge_capacity": 57, "investment_quality": 44, "america_score": 44, "adversary_exposure": 86},
+      "normalized": {"surge_capacity": 81.4, "investment_quality": 88.0, "america_score": 88.0, "adversary_exposure": 86.0},
+      "weighted": {"surge_capacity": 24.4, "investment_quality": 17.6, "america_score": 22.0, "adversary_exposure": 21.5},
+      "arsenal_score": 85.5
+    }
+  },
+
+  "surge_simulation": {
+    "_comment": "Deterministic stock-and-flow model. Run per munition over a fixed horizon. This is exactly what the Surge Simulator computes.",
+    "horizon_days": 180,
+    "core_recurrence": "inventory[t+1] = max(0, inventory[t] + production[t] - consumption[t])",
+    "consumption": "consumption[t] = munition.peak_consumption_per_day × demand_profile[scenario_type](t)",
+    "production": {
+      "before_lead_time": "production[t] = munition.baseline_production_per_day   (for t < leadTime)",
+      "during_ramp": "production[t] = baseline × (1 + (maxMultiple - 1) × progress),  progress = min(1, (t - leadTime) / rampDur)"
+    },
+    "ramp_params_from_surge_score": {
+      "_comment": "s = surge_score / 100. These map a company's surge score to how fast/high its production can ramp.",
+      "leadTime_days": "round(110 - s×90)",
+      "maxMultiple": "1.5 + s×3.0",
+      "rampDur_days": "round(170 - s×120)",
+      "parameters": {
+        "lead_time_base_days": 110,
+        "lead_time_score_span_days": 90,
+        "max_multiple_base": 1.5,
+        "max_multiple_score_span": 3.0,
+        "ramp_duration_base_days": 170,
+        "ramp_duration_score_span_days": 120
+      },
+      "advanced_manufacturing_toggle": {
+        "_comment": "When 'Activate Advanced Manufacturing' is ON, apply these modifiers to the base params.",
+        "leadTime_days": "max(5, round(leadTime × 0.18))",
+        "maxMultiple": "maxMultiple × 1.6",
+        "rampDur_days": "max(15, round(rampDur × 0.5))",
+        "parameters": {
+          "lead_time_multiplier": 0.18,
+          "lead_time_min_days": 5,
+          "max_multiple_multiplier": 1.6,
+          "ramp_duration_multiplier": 0.5,
+          "ramp_duration_min_days": 15
+        }
+      }
+    },
+    "output_metrics": {
+      "stockout_day": "first day inventory <= 0 (null if never)",
+      "meet_demand_day": "first day production >= consumption (null if never)",
+      "replenish_day": "first day inventory returns to starting level AFTER being drawn down below 98% (null if not within horizon)",
+      "drawn_down_flag": "true once inventory drops below 98% of starting inventory"
+    },
+    "demand_profiles": {
+      "_comment": "Piecewise functions of day t. Each scenario is tagged with a type that selects one of these.",
+      "taiwan":   "t<=21 ? 1.0 : t<=60 ? 1.0 - 0.25×((t-21)/39) : 0.75",
+      "korea":    "t<=30 ? 1.0 : t<=120 ? 1.0 - 0.20×((t-30)/90) : 0.80",
+      "baltic":   "t<=25 ? 0.8 : t<=70 ? 0.8 + 0.20×((t-25)/45) : 1.00",
+      "maritime": "0.55 + 0.40×abs(sin((t/45)×π))",
+      "multi":    "t<=40 ? 1.0 : 0.90",
+      "epicfury": "t<=12 ? 1.0 : 0.05"
+    },
+    "scenario_types": {
+      "shock": "short, ferocious fight; magazine depth built pre-conflict decides the outcome (taiwan, multi)",
+      "grind": "protracted attrition; surge ramps have time to overtake demand (korea, baltic, maritime)",
+      "replenish": "fight ends fast; the contest is rebuilding the magazine (epicfury)"
+    }
+  },
+
+  "risk_levels": {
+    "clean": "Low Exposure",
+    "moderate": "Moderate",
+    "severe": "Severe",
+    "critical": "Critical (e.g. combined China supply + finance)"
+  },
+
+  "color_system": {
+    "navy": "#001F5B",
+    "red": "#BF0A30",
+    "white": "#FFFFFF",
+    "adversary_supply_china": "#CC0000",
+    "adversary_finance_china": "#FFDE00",
+    "neutral_nonallied": "#1B4D2E",
+    "allied": "#94A3B8",
+    "success_green": "#0D7C3F",
+    "score_mid": "#D97706"
+  }
+}

@@ -1,0 +1,727 @@
+{
+  "_comment": "Defense Watch theater model: the Surge Simulator dataset. Built from the client's 2026-08-27 Theater Munitions-Expenditure and Advanced-Manufacturing Surge Uplift workbooks by data/scripts/build_theater_model.py. Do not hand-edit; fix the script or the archived source and rebuild. Production rates, surge multiples and expenditure are open-source estimates (CSIS, RAND, DoD budget documents, 2025-2026 press) and are cited per cell. Inventory figures are LOW to MEDIUM confidence open-source estimates used for relative readiness only; they are not, and must never be presented as, real stockpile counts. Every Epic Fury figure and any note tagged [IRAN-2026] is post-cutoff press reporting and NEEDS VERIFICATION before publication.",
+  "_revision": "2026-09-14: first build. Replaces scenarios_new.json as the simulator input once the engine is switched over. Site munition ids kept where a line already existed (tlam, jav, sting); client_key carries the workbook key.",
+  "_schema": {
+    "weapons[].current_production_per_year": "most recent observed annual output",
+    "weapons[].surge_production_per_year": "round(current x surge_multiple); optimistic-but-real announced target plus new-entrant capacity",
+    "weapons[].available_inventory_units": "open-source estimate, see inventory_confidence; relative readiness only",
+    "weapons[].industrial_base": "names in rankings_new.json to link the line to company pages",
+    "theaters[].expenditure[id].units_90d": "US rounds expended over a ~90-day full campaign",
+    "theaters[].expenditure[id].tag": "ANCHOR = pinned to a published figure; ANCHOR* = published opening-phase figure extended to 90 days; MODEL = modelled from rates or analogy",
+    "theaters[].type": "shock = short ferocious fight; grind = protracted attrition. Display label, drives nothing"
+  },
+  "model": {
+    "horizon_days": 365,
+    "campaign_days": 90,
+    "days_per_year": 365,
+    "burn_per_day": "expenditure.units_90d / campaign_days",
+    "baseline_production_per_day": "current_production_per_year / days_per_year",
+    "advanced_production_per_day": "surge_production_per_year / days_per_year",
+    "horizon_formula": "available_inventory_units / (burn_per_day - production_per_day); SUSTAIN when production_per_day >= burn_per_day; null when units_90d is 0",
+    "advanced_applies_from_day": 1,
+    "lead_time_policy": "base_lead_months and advanced_lead_months are recorded per weapon but NOT applied. This matches the client workbook, whose Sustainment Horizon sheet applies the surge rate from day 1 and does not reference its lead-time columns. Pending client confirmation (raised 2026-09-14).",
+    "multi_theater": "expenditure is the arithmetic sum of taiwan + korea + baltic (client rule)",
+    "expected_horizons": "data/theater_model.expected.json holds every cell computed with horizon_formula; the engine acceptance test must reproduce it"
+  },
+  "weapons": [
+    {
+      "id": "tlam",
+      "client_key": "tomahawk",
+      "name": "Tomahawk (BGM-109) Blk IV/V",
+      "short_name": "Tomahawk",
+      "asset_class": "CRUISE / STRIKE MISSILE",
+      "prime": "RTX",
+      "industrial_base": [
+        "RTX (Raytheon)"
+      ],
+      "current_production_per_year": 90,
+      "surge_multiple": 11,
+      "surge_production_per_year": 990,
+      "available_inventory_units": 2000,
+      "inventory_confidence": "low",
+      "unit_cost_usd": 1900000,
+      "advanced_cost_factor": 0.8,
+      "advanced_unit_cost_usd": 1520000,
+      "base_lead_months": 36,
+      "advanced_lead_months": 18,
+      "binding_step": "Boost SRM + precision-machined airframe/guidance",
+      "advanced_manufacturing_relief": "Hadrian (machined parts) + X-Bow/L3Harris Missile Solutions (boost SRM); Anduril Barracuda adds strike-role mass"
+    },
+    {
+      "id": "pac3",
+      "client_key": "pac3",
+      "name": "PAC-3 MSE (Patriot)",
+      "short_name": "PAC-3 MSE",
+      "asset_class": "AIR / MISSILE DEFENSE INTERCEPTOR",
+      "prime": "Lockheed Martin",
+      "industrial_base": [
+        "Lockheed Martin"
+      ],
+      "current_production_per_year": 650,
+      "surge_multiple": 3.08,
+      "surge_production_per_year": 2002,
+      "available_inventory_units": 900,
+      "inventory_confidence": "medium",
+      "unit_cost_usd": 4500000,
+      "advanced_cost_factor": 0.85,
+      "advanced_unit_cost_usd": 3825000,
+      "base_lead_months": 36,
+      "advanced_lead_months": 18,
+      "binding_step": "Solid rocket motor (motor output being tripled)",
+      "advanced_manufacturing_relief": "X-Bow (additive SRM, 'PAC-3 to AMRAAM' cited) + L3Harris Missile Solutions"
+    },
+    {
+      "id": "sm3",
+      "client_key": "sm3",
+      "name": "SM-3 (RIM-161 IB/IIA)",
+      "short_name": "SM-3",
+      "asset_class": "AIR / MISSILE DEFENSE INTERCEPTOR",
+      "prime": "RTX",
+      "industrial_base": [
+        "RTX (Raytheon)"
+      ],
+      "current_production_per_year": 55,
+      "surge_multiple": 3.89,
+      "surge_production_per_year": 214,
+      "available_inventory_units": 300,
+      "inventory_confidence": "low",
+      "unit_cost_usd": 25000000,
+      "advanced_cost_factor": 0.85,
+      "advanced_unit_cost_usd": 21250000,
+      "base_lead_months": 42,
+      "advanced_lead_months": 24,
+      "binding_step": "Multi-stage SRM stack; 36-39 mo lead",
+      "advanced_manufacturing_relief": "X-Bow / Ursa Major additive SRM (plausible) + Northrop"
+    },
+    {
+      "id": "sm6",
+      "client_key": "sm6",
+      "name": "SM-6 (RIM-174)",
+      "short_name": "SM-6",
+      "asset_class": "AIR / MISSILE DEFENSE INTERCEPTOR",
+      "prime": "RTX",
+      "industrial_base": [
+        "RTX (Raytheon)"
+      ],
+      "current_production_per_year": 166,
+      "surge_multiple": 3.25,
+      "surge_production_per_year": 540,
+      "available_inventory_units": 500,
+      "inventory_confidence": "low",
+      "unit_cost_usd": 5000000,
+      "advanced_cost_factor": 0.8,
+      "advanced_unit_cost_usd": 4000000,
+      "base_lead_months": 36,
+      "advanced_lead_months": 18,
+      "binding_step": "MK-104 dual-thrust solid rocket motor",
+      "advanced_manufacturing_relief": "Ursa Major 'Lynx' additive MK-104 (CITED, Navy contract) + L3Harris"
+    },
+    {
+      "id": "amraam",
+      "client_key": "amraam",
+      "name": "AMRAAM (AIM-120C/D)",
+      "short_name": "AMRAAM",
+      "asset_class": "AIR-TO-AIR MISSILE",
+      "prime": "RTX",
+      "industrial_base": [
+        "RTX (Raytheon)"
+      ],
+      "current_production_per_year": 900,
+      "surge_multiple": 2.11,
+      "surge_production_per_year": 1899,
+      "available_inventory_units": 13000,
+      "inventory_confidence": "medium",
+      "unit_cost_usd": 1200000,
+      "advanced_cost_factor": 0.8,
+      "advanced_unit_cost_usd": 960000,
+      "base_lead_months": 30,
+      "advanced_lead_months": 12,
+      "binding_step": "SRM + seeker",
+      "advanced_manufacturing_relief": "X-Bow (AMRAAM cited) + Anduril/RTX 'Highly Loaded Grain' motor (Oct-2025 static fire)"
+    },
+    {
+      "id": "jassm",
+      "client_key": "jassm",
+      "name": "JASSM / JASSM-ER (AGM-158)",
+      "short_name": "JASSM-ER",
+      "asset_class": "CRUISE / STRIKE MISSILE",
+      "prime": "Lockheed Martin",
+      "industrial_base": [
+        "Lockheed Martin"
+      ],
+      "current_production_per_year": 720,
+      "surge_multiple": 1.53,
+      "surge_production_per_year": 1102,
+      "available_inventory_units": 1500,
+      "inventory_confidence": "medium",
+      "unit_cost_usd": 1600000,
+      "advanced_cost_factor": 0.75,
+      "advanced_unit_cost_usd": 1200000,
+      "base_lead_months": 30,
+      "advanced_lead_months": 15,
+      "binding_step": "Turbofan engine (Williams) + IIR seeker -- NOT an SRM",
+      "advanced_manufacturing_relief": "Hadrian (parts) + Divergent (structures, 'clean-sheet-to-flight 16 wks'); engine is the true limit -> Anduril Barracuda / Castelion substitute in the strike role"
+    },
+    {
+      "id": "thaad",
+      "client_key": "thaad",
+      "name": "THAAD interceptor",
+      "short_name": "THAAD",
+      "asset_class": "AIR / MISSILE DEFENSE INTERCEPTOR",
+      "prime": "Lockheed Martin",
+      "industrial_base": [
+        "Lockheed Martin"
+      ],
+      "current_production_per_year": 96,
+      "surge_multiple": 4.17,
+      "surge_production_per_year": 400,
+      "available_inventory_units": 250,
+      "inventory_confidence": "medium",
+      "unit_cost_usd": 13000000,
+      "advanced_cost_factor": 0.85,
+      "advanced_unit_cost_usd": 11050000,
+      "base_lead_months": 42,
+      "advanced_lead_months": 24,
+      "binding_step": "SRM booster (propulsion being quadrupled); AN/TPY-2 radar",
+      "advanced_manufacturing_relief": "X-Bow / Ursa Major additive SRM (plausible) + L3Harris"
+    },
+    {
+      "id": "lrasm",
+      "client_key": "lrasm",
+      "name": "LRASM (AGM-158C)",
+      "short_name": "LRASM",
+      "asset_class": "ANTI-SHIP MISSILE",
+      "prime": "Lockheed Martin",
+      "industrial_base": [
+        "Lockheed Martin"
+      ],
+      "current_production_per_year": 150,
+      "surge_multiple": 3.33,
+      "surge_production_per_year": 500,
+      "available_inventory_units": 450,
+      "inventory_confidence": "low",
+      "unit_cost_usd": 3240000,
+      "advanced_cost_factor": 0.75,
+      "advanced_unit_cost_usd": 2430000,
+      "base_lead_months": 36,
+      "advanced_lead_months": 18,
+      "binding_step": "Turbofan + shared JASSM line",
+      "advanced_manufacturing_relief": "Divergent (structures) + Hadrian; Ares Industries adds anti-ship-role mass"
+    },
+    {
+      "id": "harm",
+      "client_key": "harm",
+      "name": "HARM/AARGM (AGM-88)",
+      "short_name": "HARM / AARGM",
+      "asset_class": "ANTI-RADIATION MISSILE",
+      "prime": "Northrop Grumman",
+      "industrial_base": [
+        "Northrop Grumman",
+        "RTX (Raytheon)"
+      ],
+      "current_production_per_year": 120,
+      "surge_multiple": 3.33,
+      "surge_production_per_year": 400,
+      "available_inventory_units": 2000,
+      "inventory_confidence": "low",
+      "unit_cost_usd": 2000000,
+      "advanced_cost_factor": 0.8,
+      "advanced_unit_cost_usd": 1600000,
+      "base_lead_months": 36,
+      "advanced_lead_months": 18,
+      "binding_step": "ER rocket motor + MMW seeker",
+      "advanced_manufacturing_relief": "X-Bow / Ursa Major additive SRM (plausible)"
+    },
+    {
+      "id": "m155",
+      "client_key": "m155",
+      "name": "155mm projectiles",
+      "short_name": "155mm",
+      "asset_class": "155MM ARTILLERY ROUND",
+      "prime": "GD-OTS / arsenals",
+      "industrial_base": [
+        "General Dynamics"
+      ],
+      "current_production_per_year": 430000,
+      "surge_multiple": 2.79,
+      "surge_production_per_year": 1199700,
+      "available_inventory_units": 500000,
+      "inventory_confidence": "low",
+      "unit_cost_usd": 3500,
+      "advanced_cost_factor": 0.9,
+      "advanced_unit_cost_usd": 3150,
+      "base_lead_months": 24,
+      "advanced_lead_months": 9,
+      "binding_step": "TNT / nitrocellulose / DNAN-IMX / LAP -- ENERGETICS, not additive-mfg addressable",
+      "advanced_manufacturing_relief": "New domestic TNT plant (Repkon/GD-OTS, KY) + Iowa AAP LAP & Scranton metal-parts expansion (capex, not additive)"
+    },
+    {
+      "id": "jav",
+      "client_key": "javelin",
+      "name": "Javelin (FGM-148)",
+      "short_name": "Javelin",
+      "asset_class": "ANTI-TANK MISSILE",
+      "prime": "Lockheed/RTX JV",
+      "industrial_base": [
+        "RTX (Raytheon)",
+        "Lockheed Martin"
+      ],
+      "current_production_per_year": 2400,
+      "surge_multiple": 1.65,
+      "surge_production_per_year": 3960,
+      "available_inventory_units": 20000,
+      "inventory_confidence": "low",
+      "unit_cost_usd": 220000,
+      "advanced_cost_factor": 0.85,
+      "advanced_unit_cost_usd": 187000,
+      "base_lead_months": 24,
+      "advanced_lead_months": 12,
+      "binding_step": "SRM + seeker obsolescence (two-supplier)",
+      "advanced_manufacturing_relief": "X-Bow / Ursa Major SRM (plausible) + seeker-line redesign"
+    },
+    {
+      "id": "sting",
+      "client_key": "stinger",
+      "name": "Stinger (FIM-92)",
+      "short_name": "Stinger",
+      "asset_class": "MANPADS INTERCEPTOR",
+      "prime": "RTX",
+      "industrial_base": [
+        "RTX (Raytheon)"
+      ],
+      "current_production_per_year": 400,
+      "surge_multiple": 2,
+      "surge_production_per_year": 800,
+      "available_inventory_units": 8000,
+      "inventory_confidence": "low",
+      "unit_cost_usd": 130000,
+      "advanced_cost_factor": 0.85,
+      "advanced_unit_cost_usd": 110500,
+      "base_lead_months": 30,
+      "advanced_lead_months": 18,
+      "binding_step": "Obsolete seeker redesign + SRM",
+      "advanced_manufacturing_relief": "Seeker redesign (primary) + newcomer SRM"
+    }
+  ],
+  "theaters": [
+    {
+      "id": "taiwan",
+      "label": "Taiwan Strait",
+      "long_label": "Taiwan Strait (PRC invasion)",
+      "type": "shock",
+      "description": "All-out invasion of a fortified island by the world's 2nd-largest military. A naval, air and long-range-strike fight: anti-ship missiles, standoff strike and fleet air defense dominate, with only a marginal artillery role. Per CSIS wargaming, the available anti-ship inventory is expended within the first week.",
+      "expenditure": {
+        "tlam": {
+          "units_90d": 600,
+          "tag": "MODEL",
+          "note": "Land-attack + Maritime-Strike anti-ship; subset of the ~5,000 LR-PGM bucket."
+        },
+        "pac3": {
+          "units_90d": 180,
+          "tag": "MODEL",
+          "note": "Guam/Japan/Okinawa base defense vs DF-21/DF-26 salvos."
+        },
+        "sm3": {
+          "units_90d": 60,
+          "tag": "MODEL",
+          "note": "Limited: few PRC MRBMs range US ships; some Guam/Aegis BMD."
+        },
+        "sm6": {
+          "units_90d": 300,
+          "tag": "MODEL",
+          "note": "Fleet air/missile defense + anti-surface; DMO surface engagements."
+        },
+        "amraam": {
+          "units_90d": 1000,
+          "tag": "MODEL",
+          "note": "Intense air-to-air: wargame loses hundreds of aircraft; heavy AAM expenditure."
+        },
+        "jassm": {
+          "units_90d": 1200,
+          "tag": "MODEL",
+          "note": "Standoff strike on invasion fleet+airfields; part of the ~5,000 long-range PGMs CSIS wargame expends in 3 wks."
+        },
+        "thaad": {
+          "units_90d": 70,
+          "tag": "MODEL",
+          "note": "Guam terminal defense vs PRC MRBM."
+        },
+        "lrasm": {
+          "units_90d": 450,
+          "tag": "ANCHOR*",
+          "note": "Entire available anti-ship inventory expended in ~week 1 (CSIS First Battle wargame; LRASM the pacing shortage)."
+        },
+        "harm": {
+          "units_90d": 300,
+          "tag": "MODEL",
+          "note": "SEAD vs PRC coastal/island SAMs."
+        },
+        "m155": {
+          "units_90d": 20000,
+          "tag": "MODEL",
+          "note": "US artillery role modest; Taiwan+USMC littoral fires."
+        },
+        "jav": {
+          "units_90d": 2000,
+          "tag": "MODEL",
+          "note": "Supplied to Taiwan / USMC anti-landing."
+        },
+        "sting": {
+          "units_90d": 1200,
+          "tag": "MODEL",
+          "note": "MANPADS for Taiwan/USMC air defense."
+        }
+      }
+    },
+    {
+      "id": "korea",
+      "label": "Korean Peninsula",
+      "long_label": "Korean Peninsula (DPRK war)",
+      "type": "grind",
+      "description": "A massive artillery duel against thousands of dug-in tubes ranged on Seoul, plus dense ballistic-missile defense against DPRK SRBM and MRBM salvos. Sustained for months: artillery and interceptors are the long poles.",
+      "expenditure": {
+        "tlam": {
+          "units_90d": 300,
+          "tag": "MODEL",
+          "note": "Deep-strike land attack."
+        },
+        "pac3": {
+          "units_90d": 400,
+          "tag": "MODEL",
+          "note": "Dense DPRK SRBM threat (KN-23/24/25); exceeds US-available annual allocation."
+        },
+        "sm3": {
+          "units_90d": 70,
+          "tag": "MODEL",
+          "note": "Aegis BMD vs DPRK IRBM."
+        },
+        "sm6": {
+          "units_90d": 150,
+          "tag": "MODEL",
+          "note": "Fleet defense / dual-role."
+        },
+        "amraam": {
+          "units_90d": 600,
+          "tag": "MODEL",
+          "note": "Air superiority vs numerous but low-quality DPRK air force."
+        },
+        "jassm": {
+          "units_90d": 500,
+          "tag": "MODEL",
+          "note": "Deep strike on hardened/nuclear/leadership targets."
+        },
+        "thaad": {
+          "units_90d": 130,
+          "tag": "MODEL",
+          "note": "DPRK MRBM (Nodong); exceeds a full year of production."
+        },
+        "lrasm": {
+          "units_90d": 50,
+          "tag": "MODEL",
+          "note": "Small DPRK navy; limited anti-ship demand."
+        },
+        "harm": {
+          "units_90d": 400,
+          "tag": "MODEL",
+          "note": "Dense DPRK IADS -> heavy SEAD."
+        },
+        "m155": {
+          "units_90d": 150000,
+          "tag": "MODEL",
+          "note": "US share of counter-battery vs ~14,000 DPRK tubes; Ukraine analog ~6-10k/day combined, US ~1,700/day x 90."
+        },
+        "jav": {
+          "units_90d": 3000,
+          "tag": "MODEL",
+          "note": "Large DPRK armor/mechanized force."
+        },
+        "sting": {
+          "units_90d": 1500,
+          "tag": "MODEL",
+          "note": "Low-altitude air/rotary threat."
+        }
+      }
+    },
+    {
+      "id": "baltic",
+      "label": "NATO Baltic (Art. 5)",
+      "long_label": "NATO Article 5 - Baltic (vs Russia)",
+      "type": "grind",
+      "description": "Russia invades a NATO member (Poland, Finland or the Baltics). A ground-and-air war of attrition modelled on Ukraine consumption: 155mm dominates, with anti-tank, short-range air defense, SEAD and missile defense. Demand only intensifies.",
+      "expenditure": {
+        "tlam": {
+          "units_90d": 250,
+          "tag": "MODEL",
+          "note": "Deep strike into Russian rear."
+        },
+        "pac3": {
+          "units_90d": 300,
+          "tag": "MODEL",
+          "note": "vs Russian Iskander/Kalibr salvos."
+        },
+        "sm3": {
+          "units_90d": 50,
+          "tag": "MODEL",
+          "note": "Theater BMD (limited)."
+        },
+        "sm6": {
+          "units_90d": 60,
+          "tag": "MODEL",
+          "note": "Baltic Sea fleet air defense (limited)."
+        },
+        "amraam": {
+          "units_90d": 800,
+          "tag": "MODEL",
+          "note": "NASAMS surface-launched + fighter air-to-air."
+        },
+        "jassm": {
+          "units_90d": 400,
+          "tag": "MODEL",
+          "note": "Standoff strike."
+        },
+        "thaad": {
+          "units_90d": 40,
+          "tag": "MODEL",
+          "note": "One battery, limited MRBM threat."
+        },
+        "lrasm": {
+          "units_90d": 40,
+          "tag": "MODEL",
+          "note": "Baltic Sea anti-ship (limited)."
+        },
+        "harm": {
+          "units_90d": 500,
+          "tag": "MODEL",
+          "note": "SEAD vs dense Russian IADS."
+        },
+        "m155": {
+          "units_90d": 250000,
+          "tag": "MODEL",
+          "note": "Ukraine analog: 6,000-10,000 rounds/day; US/NATO share ~2,800/day x 90 (RAND: 14-21 brigades to expel)."
+        },
+        "jav": {
+          "units_90d": 5000,
+          "tag": "MODEL",
+          "note": "Anti-armor vs Russian mechanized; Ukraine consumed thousands."
+        },
+        "sting": {
+          "units_90d": 2000,
+          "tag": "MODEL",
+          "note": "MANPADS vs Russian rotary/CAS."
+        }
+      }
+    },
+    {
+      "id": "maritime",
+      "label": "INDOPACOM Maritime",
+      "long_label": "INDOPACOM Maritime (sea control)",
+      "type": "grind",
+      "description": "A sustained sea-control campaign across the Western Pacific. Anti-ship, standoff strike and fleet air and missile defense weapons, fired in pulses as engagements flare. Long enough for production ramps to matter.",
+      "expenditure": {
+        "tlam": {
+          "units_90d": 600,
+          "tag": "MODEL",
+          "note": "Maritime-Strike + land attack across the theater."
+        },
+        "pac3": {
+          "units_90d": 100,
+          "tag": "MODEL",
+          "note": "Island/base point defense."
+        },
+        "sm3": {
+          "units_90d": 150,
+          "tag": "MODEL",
+          "note": "BMD vs PRC anti-ship ballistic missiles (DF-21D/DF-26)."
+        },
+        "sm6": {
+          "units_90d": 400,
+          "tag": "MODEL",
+          "note": "Anti-ship + fleet air defense (primary DMO magazine)."
+        },
+        "amraam": {
+          "units_90d": 700,
+          "tag": "MODEL",
+          "note": "Fleet air defense + carrier-air fighters."
+        },
+        "jassm": {
+          "units_90d": 500,
+          "tag": "MODEL",
+          "note": "Standoff land/maritime strike."
+        },
+        "thaad": {
+          "units_90d": 80,
+          "tag": "MODEL",
+          "note": "Guam terminal defense."
+        },
+        "lrasm": {
+          "units_90d": 450,
+          "tag": "MODEL",
+          "note": "Entire available inventory (competes with Taiwan for same magazines)."
+        },
+        "harm": {
+          "units_90d": 250,
+          "tag": "MODEL",
+          "note": "SEAD supporting maritime strike."
+        },
+        "m155": {
+          "units_90d": 5000,
+          "tag": "MODEL",
+          "note": "Minimal land component."
+        },
+        "jav": {
+          "units_90d": 500,
+          "tag": "MODEL",
+          "note": "Marine littoral raids."
+        },
+        "sting": {
+          "units_90d": 500,
+          "tag": "MODEL",
+          "note": "Ship/expeditionary point air defense."
+        }
+      }
+    },
+    {
+      "id": "multi",
+      "label": "Multi-Theater",
+      "long_label": "Multi-theatre all-out war",
+      "type": "shock",
+      "description": "Taiwan, Korea and a Baltic Article 5 trigger at once. Every category is drawn down simultaneously from one industrial base and demand never relents: the defining worst case. Demand is the arithmetic sum of the three concurrent theaters.",
+      "expenditure": {
+        "tlam": {
+          "units_90d": 1150,
+          "tag": "MODEL",
+          "note": "Superposition of concurrent Taiwan + Korea + Baltic demand (Iran/Maritime would add more)."
+        },
+        "pac3": {
+          "units_90d": 880,
+          "tag": "MODEL",
+          "note": "Superposition of concurrent Taiwan + Korea + Baltic demand (Iran/Maritime would add more)."
+        },
+        "sm3": {
+          "units_90d": 180,
+          "tag": "MODEL",
+          "note": "Superposition of concurrent Taiwan + Korea + Baltic demand (Iran/Maritime would add more)."
+        },
+        "sm6": {
+          "units_90d": 510,
+          "tag": "MODEL",
+          "note": "Superposition of concurrent Taiwan + Korea + Baltic demand (Iran/Maritime would add more)."
+        },
+        "amraam": {
+          "units_90d": 2400,
+          "tag": "MODEL",
+          "note": "Superposition of concurrent Taiwan + Korea + Baltic demand (Iran/Maritime would add more)."
+        },
+        "jassm": {
+          "units_90d": 2100,
+          "tag": "MODEL",
+          "note": "Superposition of concurrent Taiwan + Korea + Baltic demand (Iran/Maritime would add more)."
+        },
+        "thaad": {
+          "units_90d": 240,
+          "tag": "MODEL",
+          "note": "Superposition of concurrent Taiwan + Korea + Baltic demand (Iran/Maritime would add more)."
+        },
+        "lrasm": {
+          "units_90d": 540,
+          "tag": "MODEL",
+          "note": "Superposition of concurrent Taiwan + Korea + Baltic demand (Iran/Maritime would add more)."
+        },
+        "harm": {
+          "units_90d": 1200,
+          "tag": "MODEL",
+          "note": "Superposition of concurrent Taiwan + Korea + Baltic demand (Iran/Maritime would add more)."
+        },
+        "m155": {
+          "units_90d": 420000,
+          "tag": "MODEL",
+          "note": "Superposition of concurrent Taiwan + Korea + Baltic demand (Iran/Maritime would add more)."
+        },
+        "jav": {
+          "units_90d": 10000,
+          "tag": "MODEL",
+          "note": "Superposition of concurrent Taiwan + Korea + Baltic demand (Iran/Maritime would add more)."
+        },
+        "sting": {
+          "units_90d": 4700,
+          "tag": "MODEL",
+          "note": "Superposition of concurrent Taiwan + Korea + Baltic demand (Iran/Maritime would add more)."
+        }
+      },
+      "derived_from": [
+        "taiwan",
+        "korea",
+        "baltic"
+      ]
+    },
+    {
+      "id": "epicfury",
+      "label": "Epic Fury",
+      "long_label": "Epic Fury continuation (2026 Iran war +90d)",
+      "type": "grind",
+      "description": "The 2026 Iran campaign continued for another 90 days at its February to April intensity. Interceptors and standoff strike weapons that were already depleted in the 39-day campaign keep burning, several beyond their remaining inventory.",
+      "expenditure": {
+        "tlam": {
+          "units_90d": 1400,
+          "tag": "ANCHOR*",
+          "note": "39-day campaign fired >1,000 (mostly opening salvos); +~400 sustained over the +51d continuation. [IRAN-2026: needs verification]"
+        },
+        "pac3": {
+          "units_90d": 700,
+          "tag": "ANCHOR*",
+          "note": ">=45% of US Patriot inventory in 39 days; continuation draws down remaining stock + new production. [IRAN-2026]"
+        },
+        "sm3": {
+          "units_90d": 160,
+          "tag": "ANCHOR*",
+          "note": "39-day ~80; +~80 continuation. [IRAN-2026]"
+        },
+        "sm6": {
+          "units_90d": 120,
+          "tag": "MODEL",
+          "note": "Part of the >100 combined SM-3/SM-6 reported; sustained naval BMD. [IRAN-2026]"
+        },
+        "amraam": {
+          "units_90d": 200,
+          "tag": "MODEL",
+          "note": "Limited air-to-air (weak Iranian air force)."
+        },
+        "jassm": {
+          "units_90d": 1600,
+          "tag": "ANCHOR*",
+          "note": "39-day ~1,100 JASSM-ER (largest ever); +~500 continuation. EXCEEDS ~1,500 remaining inventory. [IRAN-2026]"
+        },
+        "thaad": {
+          "units_90d": 300,
+          "tag": "ANCHOR*",
+          "note": "39-day >150 (incl 2025 Twelve-Day War); Iran keeps firing ballistic missiles -> +~150. EXCEEDS ~250 inventory. [IRAN-2026]"
+        },
+        "lrasm": {
+          "units_90d": 0,
+          "tag": "ANCHOR",
+          "note": "Not used vs Iran; CSIS: LRASM inventory 'largely unaffected'. [IRAN-2026]"
+        },
+        "harm": {
+          "units_90d": 600,
+          "tag": "MODEL",
+          "note": "Heavy SEAD vs Iranian IADS early, sustained through continuation."
+        },
+        "m155": {
+          "units_90d": 3000,
+          "tag": "MODEL",
+          "note": "Minimal US ground-artillery role."
+        },
+        "jav": {
+          "units_90d": 200,
+          "tag": "MODEL",
+          "note": "Minimal ground component."
+        },
+        "sting": {
+          "units_90d": 300,
+          "tag": "MODEL",
+          "note": "Base/point air defense."
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,946 @@
+{
+  "_comment": "Defense Watch \u2014 RANKINGS SECTION dataset. Primes and subcontractors ranked SEPARATELY. Company names, categories, ownership, and public financials are REAL and current as of the noted dates. The four pillar scores and the resulting arsenal_score are EDITORIAL ESTIMATES produced by applying the Arsenal methodology by judgment \u2014 they are NOT sourced figures and must be reviewed before publication. Adversary-exposure claims about named companies (esp. Divergent) must be verified against primary cap-table / CFIUS sources before any public use.",
+  "_schema": {
+    "arsenal_score": "0-100 composite = weighted sum of four normalized pillars (see scoring_model.json)",
+    "pillar_scores": "each 0-100. adversary_exposure is INVERSE: HIGH = LESS China/adversary exposure (good), LOW = MORE exposure (bad)",
+    "pillar_weights_used": "prime: surge .30 / investment .20 / america .25 / adversary .25 ; sub: surge .35 / investment .25 / america .20 / adversary .20",
+    "data_confidence": "high = public financials verified; medium = private/estimated scale; low = fast-moving startup or unverified exposure",
+    "score_basis": "editorial-estimate for all pillar scores"
+  },
+  "scoring_weights": {
+    "prime": {
+      "surge_capacity": 0.3,
+      "investment_quality": 0.2,
+      "america_score": 0.25,
+      "adversary_exposure": 0.25
+    },
+    "subcontractor": {
+      "surge_capacity": 0.35,
+      "investment_quality": 0.25,
+      "america_score": 0.2,
+      "adversary_exposure": 0.2
+    }
+  },
+  "primes": [
+    {
+      "rank": 1,
+      "name": "Lockheed Martin",
+      "ticker": "LMT",
+      "tier": "prime",
+      "category": "Aerospace & Defense Systems",
+      "headquarters": "Bethesda, MD",
+      "employees": "~123,000",
+      "fy2025_revenue_usd_bn": 75.0,
+      "ownership": "Public",
+      "key_programs": [
+        "F-35",
+        "PAC-3",
+        "THAAD",
+        "Fires (GMLRS/ATACMS/PrSM)",
+        "Sikorsky"
+      ],
+      "arsenal_score": 86,
+      "pillar_scores": {
+        "surge_capacity": 85,
+        "investment_quality": 88,
+        "america_score": 90,
+        "adversary_exposure": 82
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Deep programs and Missiles & Fire Control expansion, but legacy line lead-times cap ramp speed.",
+        "investment_quality": "Blue-chip institutional base, heavy DoD-aligned capital, strong balance sheet.",
+        "america_score": "Overwhelmingly US workforce, footprint, and supply base; large domestic tax presence.",
+        "adversary_exposure": "Cleared prime with tight ITAR controls; residual sub-tier China dependency in electronics/materials."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+2",
+      "trend_direction": "up",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 2,
+      "name": "Northrop Grumman",
+      "ticker": "NOC",
+      "tier": "prime",
+      "category": "Strategic Systems & Aeronautics",
+      "headquarters": "Falls Church, VA",
+      "employees": "~95,000",
+      "fy2025_revenue_usd_bn": 41.9,
+      "ownership": "Public",
+      "key_programs": [
+        "B-21 Raider",
+        "Sentinel ICBM",
+        "Solid rocket motors",
+        "Space"
+      ],
+      "arsenal_score": 84,
+      "pillar_scores": {
+        "surge_capacity": 78,
+        "investment_quality": 80,
+        "america_score": 92,
+        "adversary_exposure": 88
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Strategic monopoly programs; solid rocket motor capacity is a national chokepoint being expanded.",
+        "investment_quality": "Strong institutional ownership, disciplined capital allocation.",
+        "america_score": "Almost entirely US; strategic-nuclear work is inherently domestic.",
+        "adversary_exposure": "Cleared prime; minimal foreign entanglement given nuclear mission set."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+1",
+      "trend_direction": "up",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 3,
+      "name": "General Dynamics",
+      "ticker": "GD",
+      "tier": "prime",
+      "category": "Land & Naval Systems",
+      "headquarters": "Reston, VA",
+      "employees": "~117,000",
+      "fy2025_revenue_usd_bn": 52.6,
+      "ownership": "Public",
+      "key_programs": [
+        "Virginia/Columbia submarines",
+        "Abrams",
+        "155mm (OTS)",
+        "Gulfstream"
+      ],
+      "arsenal_score": 83,
+      "pillar_scores": {
+        "surge_capacity": 82,
+        "investment_quality": 82,
+        "america_score": 88,
+        "adversary_exposure": 80
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Submarine and 155mm capacity constrained by shipyard/forging bottlenecks; actively funded to expand.",
+        "investment_quality": "Solid public base; Gulfstream diversifies cash flow.",
+        "america_score": "Large US industrial footprint incl. OTS munitions plants.",
+        "adversary_exposure": "Cleared prime; modest commercial-aviation supply exposure."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "0",
+      "trend_direction": "flat",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 5,
+      "name": "RTX (Raytheon)",
+      "ticker": "RTX",
+      "tier": "prime",
+      "category": "Missiles & Defense Electronics",
+      "headquarters": "Arlington, VA",
+      "employees": "~180,000",
+      "fy2025_revenue_usd_bn": 88.6,
+      "ownership": "Public",
+      "key_programs": [
+        "Tomahawk",
+        "SM-6",
+        "AMRAAM",
+        "Patriot",
+        "LRASM (with LM)"
+      ],
+      "arsenal_score": 75,
+      "pillar_scores": {
+        "surge_capacity": 77,
+        "investment_quality": 78,
+        "america_score": 76,
+        "adversary_exposure": 68
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Critical missile portfolio but well-documented sub-tier and microelectronics bottlenecks.",
+        "investment_quality": "Large-cap, but Collins/Pratt commercial mix dilutes pure-defense focus.",
+        "america_score": "Major US footprint; sizable international commercial-aerospace supply base.",
+        "adversary_exposure": "Disclosed historical China supply-chain items in commercial aerospace; active mitigation."
+      },
+      "risk_level": "moderate",
+      "risk_label": "Moderate \u2014 Historical/Supply",
+      "quarter_trend": "-1",
+      "trend_direction": "down",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 4,
+      "name": "L3Harris Technologies",
+      "ticker": "LHX",
+      "tier": "prime",
+      "category": "C4ISR & Electronic Warfare",
+      "headquarters": "Melbourne, FL",
+      "employees": "~47,000",
+      "fy2025_revenue_usd_bn": 21.3,
+      "ownership": "Public",
+      "key_programs": [
+        "Tactical radios",
+        "EW",
+        "Space sensors",
+        "Missile Solutions (ex-Aerojet motors)"
+      ],
+      "arsenal_score": 76,
+      "pillar_scores": {
+        "surge_capacity": 72,
+        "investment_quality": 72,
+        "america_score": 82,
+        "adversary_exposure": 78
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Agile 'non-traditional prime'; absorbing Aerojet motor capacity strengthens surge posture.",
+        "investment_quality": "Solid public base; active portfolio reshaping (Missile Solutions carve-out).",
+        "america_score": "Predominantly US; strong tactical-comms domestic manufacturing.",
+        "adversary_exposure": "Cleared prime; standard microelectronics sub-tier exposure."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+3",
+      "trend_direction": "up",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 6,
+      "name": "Boeing Defense, Space & Security",
+      "ticker": "BA",
+      "tier": "prime",
+      "category": "Aircraft & Platforms",
+      "headquarters": "Arlington, VA",
+      "employees": "~18,000 (segment)",
+      "fy2025_revenue_usd_bn": 23.9,
+      "ownership": "Public (Boeing segment)",
+      "key_programs": [
+        "F-15EX",
+        "KC-46",
+        "F/A-18",
+        "Apache",
+        "MQ-25",
+        "T-7"
+      ],
+      "arsenal_score": 72,
+      "pillar_scores": {
+        "surge_capacity": 74,
+        "investment_quality": 58,
+        "america_score": 82,
+        "adversary_exposure": 70
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Persistent fixed-price program losses and execution issues drag ramp capacity.",
+        "investment_quality": "Parent-company financial stress and commercial crisis spill into defense capital.",
+        "america_score": "Large US footprint but significant global commercial supply chain.",
+        "adversary_exposure": "Commercial-aviation China market ties and supply exposure raise the flag vs. pure primes."
+      },
+      "risk_level": "moderate",
+      "risk_label": "Moderate \u2014 Supply Chain",
+      "quarter_trend": "-4",
+      "trend_direction": "down",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    }
+  ],
+  "subcontractors": [
+    {
+      "rank": 1,
+      "name": "Anduril Industries",
+      "ticker": "private",
+      "tier": "subcontractor",
+      "subtype": "technology-enabled",
+      "category": "Autonomous Systems & Software",
+      "headquarters": "Costa Mesa, CA",
+      "ownership": "Private (~$61B valuation, 2026)",
+      "key_programs": [
+        "Lattice OS",
+        "Ghost/Roadrunner",
+        "Arsenal-1 hyperscale factory"
+      ],
+      "arsenal_score": 91,
+      "pillar_scores": {
+        "surge_capacity": 88,
+        "investment_quality": 95,
+        "america_score": 92,
+        "adversary_exposure": 92
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Software-defined 'Arsenal-1' hyperscale plant is built expressly for mass surge \u2014 the thesis case.",
+        "investment_quality": "Elite US venture + growth capital; explicitly defense-mission aligned.",
+        "america_score": "US-built, US-workforce; onshoring-first strategy.",
+        "adversary_exposure": "US-controlled cap table; strong security posture, some commercial component sourcing."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+4",
+      "trend_direction": "up",
+      "data_confidence": "medium",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 2,
+      "name": "AeroVironment",
+      "ticker": "AVAV",
+      "tier": "subcontractor",
+      "subtype": "technology-enabled",
+      "category": "Loitering Munitions & Small UAS",
+      "headquarters": "Arlington, VA",
+      "ownership": "Public",
+      "key_programs": [
+        "Switchblade",
+        "Puma",
+        "JUMP 20"
+      ],
+      "arsenal_score": 88,
+      "pillar_scores": {
+        "surge_capacity": 90,
+        "investment_quality": 82,
+        "america_score": 88,
+        "adversary_exposure": 90
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Switchblade demand pulled major capacity expansion; proven ramp.",
+        "investment_quality": "Public, defense-pure, healthy balance sheet.",
+        "america_score": "US production; expanding domestic lines.",
+        "adversary_exposure": "Cleared; small-UAS component sourcing requires vigilance."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+2",
+      "trend_direction": "up",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 3,
+      "name": "BWX Technologies",
+      "ticker": "BWXT",
+      "tier": "subcontractor",
+      "subtype": "strategic",
+      "category": "Naval Nuclear Reactors & Components",
+      "headquarters": "Lynchburg, VA",
+      "ownership": "Public",
+      "key_programs": [
+        "Naval nuclear reactors (subs/carriers)",
+        "Nuclear fuel"
+      ],
+      "arsenal_score": 86,
+      "pillar_scores": {
+        "surge_capacity": 72,
+        "investment_quality": 88,
+        "america_score": 95,
+        "adversary_exposure": 98
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Sole-source nuclear components; capacity is deliberately constrained and hard to expand fast.",
+        "investment_quality": "Stable public base; long-cycle Navy contracts.",
+        "america_score": "Essentially 100% US; security-critical domestic work.",
+        "adversary_exposure": "Among the lowest exposure in the set given the classified nuclear mission."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+1",
+      "trend_direction": "up",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 4,
+      "name": "Howmet Aerospace",
+      "ticker": "HWM",
+      "tier": "subcontractor",
+      "subtype": "materials",
+      "category": "Engineered Structures & Fasteners",
+      "headquarters": "Pittsburgh, PA",
+      "ownership": "Public",
+      "key_programs": [
+        "Turbine airfoils",
+        "Fastening systems",
+        "Forged wheels"
+      ],
+      "arsenal_score": 84,
+      "pillar_scores": {
+        "surge_capacity": 82,
+        "investment_quality": 88,
+        "america_score": 84,
+        "adversary_exposure": 84
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Critical forgings/airfoils; capacity constrained industry-wide.",
+        "investment_quality": "Strong public performer with pricing power.",
+        "america_score": "Major US aerospace-materials base plus commercial mix.",
+        "adversary_exposure": "Global commercial-aero customers; standard exposure."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+1",
+      "trend_direction": "up",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 5,
+      "name": "Hadrian",
+      "ticker": "private",
+      "tier": "subcontractor",
+      "subtype": "technology-enabled",
+      "category": "Software-Defined Precision Manufacturing",
+      "headquarters": "Torrance & Mesa, AZ",
+      "ownership": "Private (VC-backed)",
+      "key_programs": [
+        "Automated precision machining",
+        "Factories-as-a-service for primes"
+      ],
+      "arsenal_score": 84,
+      "pillar_scores": {
+        "surge_capacity": 72,
+        "investment_quality": 86,
+        "america_score": 92,
+        "adversary_exposure": 92
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Trains non-traditional workers in weeks and reconfigures lines in software \u2014 highest surge in the set.",
+        "investment_quality": "Top-tier US venture capital, defense-focused.",
+        "america_score": "Domestic factories built to reshore precision parts.",
+        "adversary_exposure": "US-controlled; some imported machine tools/components typical of the sector."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+5",
+      "trend_direction": "up",
+      "data_confidence": "medium",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 6,
+      "name": "Kratos Defense & Security",
+      "ticker": "KTOS",
+      "tier": "subcontractor",
+      "subtype": "technology-enabled",
+      "category": "Affordable Drones, Propulsion & Hypersonics",
+      "headquarters": "San Diego, CA",
+      "ownership": "Public",
+      "key_programs": [
+        "Valkyrie XQ-58",
+        "Turbine engines",
+        "Hypersonic targets"
+      ],
+      "arsenal_score": 83,
+      "pillar_scores": {
+        "surge_capacity": 84,
+        "investment_quality": 76,
+        "america_score": 86,
+        "adversary_exposure": 88
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Explicit low-cost, high-rate 'affordable mass' production model.",
+        "investment_quality": "Public, defense-pure; reinvesting in capacity.",
+        "america_score": "US manufacturing footprint across drones and propulsion.",
+        "adversary_exposure": "Cleared; typical electronics sub-tier exposure."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+2",
+      "trend_direction": "up",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 7,
+      "name": "MP Materials",
+      "ticker": "MP",
+      "tier": "subcontractor",
+      "subtype": "materials",
+      "category": "Rare-Earth Mining & Magnets",
+      "headquarters": "Las Vegas, NV (Mountain Pass, CA mine)",
+      "ownership": "Public (US government equity stake, 2025)",
+      "key_programs": [
+        "Mountain Pass mine",
+        "Fort Worth magnet plant"
+      ],
+      "arsenal_score": 83,
+      "pillar_scores": {
+        "surge_capacity": 78,
+        "investment_quality": 82,
+        "america_score": 94,
+        "adversary_exposure": 80
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Only scaled US rare-earth source; magnet capacity ramping but years to full independence.",
+        "investment_quality": "DoD equity stake + price floor is a landmark strategic-capital signal.",
+        "america_score": "The flagship domestic-sourcing reshoring story \u2014 mine-to-magnet in the US.",
+        "adversary_exposure": "Historically sold concentrate to China for processing; now explicitly building the ex-China alternative."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure \u2014 Reshoring",
+      "quarter_trend": "+4",
+      "trend_direction": "up",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 8,
+      "name": "Curtiss-Wright",
+      "ticker": "CW",
+      "tier": "subcontractor",
+      "subtype": "traditional",
+      "category": "Naval Flow Control, Actuation & Electronics",
+      "headquarters": "Davidson, NC",
+      "ownership": "Public",
+      "key_programs": [
+        "Naval propulsion components",
+        "Embedded computing"
+      ],
+      "arsenal_score": 80,
+      "pillar_scores": {
+        "surge_capacity": 74,
+        "investment_quality": 82,
+        "america_score": 84,
+        "adversary_exposure": 86
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Diversified components; incremental capacity, not surge-oriented.",
+        "investment_quality": "Stable public compounder.",
+        "america_score": "Strong US naval-industrial content.",
+        "adversary_exposure": "Cleared naval work; limited exposure."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "0",
+      "trend_direction": "flat",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 9,
+      "name": "Saronic Technologies",
+      "ticker": "private",
+      "tier": "subcontractor",
+      "subtype": "technology-enabled",
+      "category": "Autonomous Surface Vessels",
+      "headquarters": "Austin, TX",
+      "ownership": "Private (VC-backed)",
+      "key_programs": [
+        "Autonomous USVs",
+        "Port Alpha shipyard"
+      ],
+      "arsenal_score": 80,
+      "pillar_scores": {
+        "surge_capacity": 68,
+        "investment_quality": 84,
+        "america_score": 88,
+        "adversary_exposure": 90
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Purpose-built autonomous shipyard aimed at high-rate USV output.",
+        "investment_quality": "Large recent US growth rounds; defense-aligned.",
+        "america_score": "US shipbuilding reshoring play.",
+        "adversary_exposure": "US-controlled; maritime electronics sourcing to watch."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+6",
+      "trend_direction": "up",
+      "data_confidence": "low",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 10,
+      "name": "Shield AI",
+      "ticker": "private",
+      "tier": "subcontractor",
+      "subtype": "technology-enabled",
+      "category": "AI Pilots & Autonomous Aircraft",
+      "headquarters": "San Diego, CA",
+      "ownership": "Private (VC-backed)",
+      "key_programs": [
+        "Hivemind autonomy",
+        "V-BAT"
+      ],
+      "arsenal_score": 80,
+      "pillar_scores": {
+        "surge_capacity": 72,
+        "investment_quality": 82,
+        "america_score": 88,
+        "adversary_exposure": 85
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Software-first autonomy scales quickly; airframe production still maturing.",
+        "investment_quality": "Strong US venture backing at multi-billion valuation.",
+        "america_score": "US-based development and production.",
+        "adversary_exposure": "US-controlled; standard commercial electronics sourcing."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+3",
+      "trend_direction": "up",
+      "data_confidence": "low",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 11,
+      "name": "Ursa Major",
+      "ticker": "private",
+      "tier": "subcontractor",
+      "subtype": "technology-enabled",
+      "category": "Rocket & Missile Propulsion",
+      "headquarters": "Berthoud, CO",
+      "ownership": "Private (VC-backed)",
+      "key_programs": [
+        "Hadley/Ripley engines",
+        "Solid rocket motors (Lynx)"
+      ],
+      "arsenal_score": 80,
+      "pillar_scores": {
+        "surge_capacity": 74,
+        "investment_quality": 74,
+        "america_score": 88,
+        "adversary_exposure": 90
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Additive-manufacturing approach to break the solid-rocket-motor chokepoint; scaling.",
+        "investment_quality": "Well-funded US venture; strategic propulsion focus.",
+        "america_score": "US design and production.",
+        "adversary_exposure": "US-controlled; specialty materials sourcing to monitor."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+3",
+      "trend_direction": "up",
+      "data_confidence": "low",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 12,
+      "name": "Castelion",
+      "ticker": "private",
+      "tier": "subcontractor",
+      "subtype": "technology-enabled",
+      "category": "Low-Cost Hypersonic Missiles",
+      "headquarters": "El Segundo, CA",
+      "ownership": "Private (VC-backed)",
+      "key_programs": [
+        "Affordable hypersonic strike"
+      ],
+      "arsenal_score": 80,
+      "pillar_scores": {
+        "surge_capacity": 68,
+        "investment_quality": 78,
+        "america_score": 90,
+        "adversary_exposure": 92
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Explicit low-cost, high-rate manufacturing thesis for hypersonics.",
+        "investment_quality": "Strong US venture backing; ex-SpaceX pedigree.",
+        "america_score": "US-based, vertically integrated.",
+        "adversary_exposure": "US-controlled; early supply chain."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+5",
+      "trend_direction": "up",
+      "data_confidence": "low",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 13,
+      "name": "Rocketdyne (ex-Aerojet)",
+      "ticker": "private",
+      "tier": "subcontractor",
+      "subtype": "traditional",
+      "category": "Rocket & Missile Propulsion",
+      "headquarters": "El Segundo, CA",
+      "ownership": "Private (AE Industrial Partners, 2026)",
+      "key_programs": [
+        "RS-25",
+        "Space & missile propulsion"
+      ],
+      "arsenal_score": 79,
+      "pillar_scores": {
+        "surge_capacity": 72,
+        "investment_quality": 72,
+        "america_score": 90,
+        "adversary_exposure": 90
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Legacy propulsion chokepoint; capacity expansion underway but slow.",
+        "investment_quality": "New PE ownership post-2026 split; recapitalized for growth.",
+        "america_score": "US strategic-propulsion base.",
+        "adversary_exposure": "Cleared propulsion work; low exposure."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "0",
+      "trend_direction": "flat",
+      "data_confidence": "medium",
+      "score_basis": "editorial-estimate",
+      "_note": "Formerly Aerojet Rocketdyne. L3Harris acquired Aerojet in 2023 and split it in early 2026: space-propulsion assets ('Rocketdyne') sold to AE Industrial Partners; missile-motor assets retained by L3Harris as 'Missile Solutions'. This entry reflects the space-propulsion successor."
+    },
+    {
+      "rank": 14,
+      "name": "Woodward, Inc.",
+      "ticker": "WWD",
+      "tier": "subcontractor",
+      "subtype": "traditional",
+      "category": "Propulsion & Energy Control Systems",
+      "headquarters": "Fort Collins, CO",
+      "ownership": "Public",
+      "key_programs": [
+        "Fuel/propulsion controls",
+        "Actuation"
+      ],
+      "arsenal_score": 78,
+      "pillar_scores": {
+        "surge_capacity": 74,
+        "investment_quality": 76,
+        "america_score": 82,
+        "adversary_exposure": 82
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Control-system supplier; steady, not surge-scaled.",
+        "investment_quality": "Solid public compounder.",
+        "america_score": "US-centric with commercial-aero mix.",
+        "adversary_exposure": "Commercial-aero exposure typical of tier."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "0",
+      "trend_direction": "flat",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 15,
+      "name": "Moog Inc.",
+      "ticker": "MOG.A",
+      "tier": "subcontractor",
+      "subtype": "traditional",
+      "category": "Precision Motion Control & Actuation",
+      "headquarters": "East Aurora, NY",
+      "ownership": "Public",
+      "key_programs": [
+        "Flight/missile actuation",
+        "Naval controls"
+      ],
+      "arsenal_score": 77,
+      "pillar_scores": {
+        "surge_capacity": 74,
+        "investment_quality": 74,
+        "america_score": 82,
+        "adversary_exposure": 82
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Precision actuation; specialized, moderate ramp.",
+        "investment_quality": "Stable public base.",
+        "america_score": "Strong US engineering/manufacturing footprint.",
+        "adversary_exposure": "Cleared programs; limited exposure."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "0",
+      "trend_direction": "flat",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 16,
+      "name": "Epirus",
+      "ticker": "private",
+      "tier": "subcontractor",
+      "subtype": "technology-enabled",
+      "category": "Directed-Energy Counter-Drone",
+      "headquarters": "Torrance, CA",
+      "ownership": "Private (VC-backed)",
+      "key_programs": [
+        "Leonidas high-power microwave"
+      ],
+      "arsenal_score": 77,
+      "pillar_scores": {
+        "surge_capacity": 66,
+        "investment_quality": 74,
+        "america_score": 88,
+        "adversary_exposure": 90
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Solid-state HPM is manufacturable; production scaling.",
+        "investment_quality": "Strong US venture backing in a hot counter-UAS niche.",
+        "america_score": "US design and build.",
+        "adversary_exposure": "US-controlled; semiconductor sourcing to watch."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+3",
+      "trend_direction": "up",
+      "data_confidence": "low",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 17,
+      "name": "Mercury Systems",
+      "ticker": "MRCY",
+      "tier": "subcontractor",
+      "subtype": "traditional",
+      "category": "Trusted Microelectronics & Processing",
+      "headquarters": "Andover, MA",
+      "ownership": "Public",
+      "key_programs": [
+        "Secure processing",
+        "RF/microwave",
+        "Trusted foundry content"
+      ],
+      "arsenal_score": 76,
+      "pillar_scores": {
+        "surge_capacity": 72,
+        "investment_quality": 72,
+        "america_score": 82,
+        "adversary_exposure": 82
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Specialized electronics; capacity steady but not high-rate.",
+        "investment_quality": "Public; recent margin/turnaround work.",
+        "america_score": "Focus on trusted, US-secure microelectronics.",
+        "adversary_exposure": "Business model is explicitly trusted/secure supply \u2014 a low-exposure strength."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+1",
+      "trend_direction": "up",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 18,
+      "name": "Hermeus",
+      "ticker": "private",
+      "tier": "subcontractor",
+      "subtype": "technology-enabled",
+      "category": "Hypersonic Propulsion & Aircraft",
+      "headquarters": "Atlanta, GA",
+      "ownership": "Private (VC-backed)",
+      "key_programs": [
+        "Quarterhorse",
+        "Chimera engine"
+      ],
+      "arsenal_score": 74,
+      "pillar_scores": {
+        "surge_capacity": 55,
+        "investment_quality": 76,
+        "america_score": 88,
+        "adversary_exposure": 90
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Rapid iterative build cadence; pre-production so scale is unproven.",
+        "investment_quality": "Strong US venture backing in a priority hypersonics niche.",
+        "america_score": "US development and test.",
+        "adversary_exposure": "US-controlled; early-stage supply chain."
+      },
+      "risk_level": "clean",
+      "risk_label": "Low Exposure",
+      "quarter_trend": "+7",
+      "trend_direction": "up",
+      "data_confidence": "low",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 19,
+      "name": "Leonardo DRS",
+      "ticker": "DRS",
+      "tier": "subcontractor",
+      "subtype": "traditional",
+      "category": "Sensors, Electro-Optics & Power",
+      "headquarters": "Arlington, VA",
+      "ownership": "Public (majority-owned by Leonardo S.p.A., Italy)",
+      "key_programs": [
+        "Sensing",
+        "Electric power & propulsion",
+        "Force protection"
+      ],
+      "arsenal_score": 74,
+      "pillar_scores": {
+        "surge_capacity": 76,
+        "investment_quality": 74,
+        "america_score": 72,
+        "adversary_exposure": 70
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Solid sensor/power production; moderate ramp.",
+        "investment_quality": "Public but majority Italian-parent controlled.",
+        "america_score": "US-operating with a foreign (allied) parent \u2014 dilutes pure-domestic score.",
+        "adversary_exposure": "Allied (NATO) parent, not adversary; managed under proxy/SSA governance."
+      },
+      "risk_level": "moderate",
+      "risk_label": "Moderate \u2014 Foreign (Allied) Parent",
+      "quarter_trend": "0",
+      "trend_direction": "flat",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 20,
+      "name": "TransDigm Group",
+      "ticker": "TDG",
+      "tier": "subcontractor",
+      "subtype": "traditional",
+      "category": "Proprietary Aerospace Components",
+      "headquarters": "Cleveland, OH",
+      "ownership": "Public",
+      "key_programs": [
+        "Sole-source proprietary aircraft parts"
+      ],
+      "arsenal_score": 73,
+      "pillar_scores": {
+        "surge_capacity": 70,
+        "investment_quality": 70,
+        "america_score": 78,
+        "adversary_exposure": 78
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Aftermarket-optimized sole-source parts; not built for wartime surge.",
+        "investment_quality": "Highly leveraged roll-up with negative book equity \u2014 a capital-structure risk flag.",
+        "america_score": "US-centric but pricing practices have drawn DoD IG scrutiny.",
+        "adversary_exposure": "Cleared content; moderate exposure."
+      },
+      "risk_level": "moderate",
+      "risk_label": "Moderate \u2014 Capital Structure",
+      "quarter_trend": "-3",
+      "trend_direction": "down",
+      "data_confidence": "high",
+      "score_basis": "editorial-estimate"
+    },
+    {
+      "rank": 21,
+      "name": "Divergent Technologies",
+      "ticker": "private",
+      "tier": "subcontractor",
+      "subtype": "technology-enabled",
+      "category": "Software-Defined Additive Manufacturing (DAPS)",
+      "headquarters": "Los Angeles, CA",
+      "ownership": "Private (VC-backed; funding history includes Asia-based venture capital)",
+      "key_programs": [
+        "DAPS modular additive production",
+        "Structural components for aerospace/defense/auto"
+      ],
+      "arsenal_score": 62,
+      "pillar_scores": {
+        "surge_capacity": 92,
+        "investment_quality": 40,
+        "america_score": 70,
+        "adversary_exposure": 30
+      },
+      "pillar_rationale": {
+        "surge_capacity": "Additive manufacturer with strong roots in the automotive industry and valuable contracts with leading Chinese OEMs.",
+        "investment_quality": "Well-funded, but the investor base is the concern rather than the strength (see adversary).",
+        "america_score": "US-based production and workforce.",
+        "adversary_exposure": "History of Chinese investors and deals with state owned enterprises."
+      },
+      "risk_level": "severe",
+      "risk_label": "Severe \u2014 Adversary-Linked Capital",
+      "quarter_trend": "-2",
+      "trend_direction": "down",
+      "data_confidence": "low",
+      "score_basis": "editorial-estimate",
+      "_note": "Included deliberately as the flagship illustration of the Adversary Exposure pillar: a company with elite advanced-manufacturing capability (high Surge) ranked LOW because of foreign/adversary-linked capital. The China-exposure characterization is based on publicly reported funding history and is an EDITORIAL ESTIMATE that must be verified against primary sources (cap table, CFIUS filings) before any public-facing use. Do not present the adversary linkage as established fact without that verification."
+    }
+  ]
+}
