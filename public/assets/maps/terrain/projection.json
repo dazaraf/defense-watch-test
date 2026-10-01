@@ -1,0 +1,51 @@
+{
+  "projection": {
+    "width": 2100,
+    "height": 1400,
+    "scaleMultiplier": 1.5
+  },
+  "theaters": {
+    "taiwan": {
+      "center": [
+        121.2,
+        24
+      ],
+      "scale": 3600
+    },
+    "korea": {
+      "center": [
+        127.5,
+        37.7
+      ],
+      "scale": 3000
+    },
+    "baltic": {
+      "center": [
+        24.5,
+        57.2
+      ],
+      "scale": 1350
+    },
+    "maritime": {
+      "center": [
+        145,
+        17
+      ],
+      "scale": 480
+    },
+    "multi": {
+      "center": [
+        72,
+        40
+      ],
+      "scale": 150
+    },
+    "epicfury": {
+      "center": [
+        -18,
+        29
+      ],
+      "scale": 128
+    }
+  }
+}

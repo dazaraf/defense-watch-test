@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Sand Particle Reveal Demo",
+  "schemaVersion": 1,
+  "description": "Canvas 2D \"sand particle reveal\" demo — approximates the Dream Group hover effect. Loads with a built-in text placeholder, or upload/drop your own image/logo. Sliders tune density, scatter spread, hover radius, settle speed, particle size, and idle drift.",
+  "mcpTools": [],
+  "mcpServerNames": []
+}
+</script>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sand Particle Reveal — WebGL</title>
+<script>
+// Runs before the <style> below is even parsed, so the page's first paint
+// already uses the right background — without this, a slower network (only
+// noticeable off localhost) can paint the default navy for a frame before
+// the ?bg= override applies, flashing the wrong color on light sections.
+(function(){
+  var bg = new URLSearchParams(location.search).get('bg');
+  if (bg && /^[0-9a-fA-F]{6}$/.test(bg)) {
+    document.documentElement.style.setProperty('--bg', '#' + bg);
+  }
+})();
+</script>
+<style>
+  :root{
+    --bg:#0a1937;
+    --panel:#151519;
+    --panel-border:#26262c;
+    --text:#e8e8ec;
+    --muted:#8a8a93;
+    --accent:#d7d7dd;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden;
+  }
+  #stage{ position:relative; width:100vw; height:100vh; }
+  canvas#glCanvas{ display:block; width:100%; height:100%; }
+  /* Hidden by default — only ?debug=1 reveals the dev control panel. Hiding
+     via CSS (not late-running JS) means it's never painted at all, instead
+     of painting then getting hidden a frame later once the embed-mode
+     script runs; that gap is what showed up as a flash on a real network. */
+  #panel, #hint{ display:none; }
+  #panel{
+    position:fixed; top:16px; left:16px;
+    background:rgba(21,21,25,0.88);
+    border:1px solid var(--panel-border);
+    border-radius:12px;
+    padding:14px 16px;
+    width:260px;
+    backdrop-filter:blur(8px);
+    font-size:12.5px;
+    z-index:10;
+    max-height:calc(100vh - 32px);
+    overflow-y:auto;
+  }
+  #panel h1{ font-size:13px; margin:0 0 2px 0; font-weight:600; letter-spacing:0.2px; }
+  #panel .sub{ color:var(--muted); margin:0 0 12px 0; line-height:1.4; }
+  .row{ margin-bottom:10px; }
+  .row label{ display:flex; justify-content:space-between; color:var(--muted); margin-bottom:3px; }
+  .row label span.val{ color:var(--accent); font-variant-numeric:tabular-nums; }
+  input[type=range]{ width:100%; accent-color:#d7d7dd; height:14px; }
+  #fileBtn{
+    display:block; width:100%; text-align:center;
+    background:#232328; border:1px solid var(--panel-border);
+    color:var(--text); padding:8px 10px; border-radius:8px;
+    cursor:pointer; font-size:12.5px; margin-bottom:6px;
+    transition:background .15s;
+  }
+  #fileBtn:hover{ background:#2c2c33; }
+  #fileInput{ display:none; }
+  .btnRow{ display:flex; gap:6px; margin-top:4px; }
+  .btnRow button{
+    flex:1; background:#1c1c21; border:1px solid var(--panel-border);
+    color:var(--text); padding:7px 6px; border-radius:8px; cursor:pointer; font-size:12px;
+  }
+  .btnRow button:hover{ background:#26262c; }
+  #stats{
+    margin-top:10px; padding-top:10px; border-top:1px solid var(--panel-border);
+    color:var(--muted); font-size:11px; line-height:1.6;
+  }
+  #hint{
+    position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
+    color:var(--muted); font-size:12px; z-index:10; pointer-events:none;
+    background:rgba(21,21,25,0.7); padding:6px 12px; border-radius:20px;
+    border:1px solid var(--panel-border);
+  }
+  #glFail{
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    background:#0b0b0d; color:#e8e8ec; font-size:14px; text-align:center; padding:24px;
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="glCanvas"></canvas>
+
+  <div id="panel">
+    <h1>Sand Particle Reveal — WebGL</h1>
+    <p class="sub">Real GPU point cloud + shader. Reveal is per-particle and distance-based to an eased cursor position — no cursor-tied glow, brightness comes only from the resolve amount itself.</p>
+
+    <label id="fileBtn" for="fileInput">Upload image / logo</label>
+    <input type="file" id="fileInput" accept="image/*">
+
+    <div class="btnRow">
+      <button id="resetBtn">Reset image</button>
+      <button id="rescatterBtn">Re-scatter</button>
+    </div>
+    <div class="btnRow">
+      <button id="textDemoBtn">Use text demo instead</button>
+    </div>
+
+    <div class="row" style="margin-top:12px;">
+      <label>Density <span class="val" id="densityVal"></span></label>
+      <input type="range" id="density" min="1" max="8" step="1" value="1">
+    </div>
+    <div class="row">
+      <label>Scatter spread <span class="val" id="scatterVal"></span></label>
+      <input type="range" id="scatter" min="0" max="300" step="5" value="26">
+    </div>
+    <div class="row">
+      <label>Wind drift <span class="val" id="windVal"></span></label>
+      <input type="range" id="wind" min="0" max="400" step="5" value="40">
+    </div>
+    <div class="row">
+      <label>Hover radius <span class="val" id="radiusVal"></span></label>
+      <input type="range" id="radius" min="50" max="900" step="10" value="480">
+    </div>
+    <div class="row">
+      <label>Resolve smoothness <span class="val" id="easeVal"></span></label>
+      <input type="range" id="ease" min="1" max="20" step="1" value="15">
+    </div>
+    <div class="row">
+      <label>Particle size <span class="val" id="sizeVal"></span></label>
+      <input type="range" id="size" min="0.4" max="4" step="0.1" value="1.0">
+    </div>
+    <div class="row">
+      <label>Idle drift <span class="val" id="driftVal"></span></label>
+      <input type="range" id="drift" min="0" max="20" step="1" value="6">
+    </div>
+    <div class="row">
+      <label>Depth / grain pop <span class="val" id="depth3dVal"></span></label>
+      <input type="range" id="depth3d" min="0" max="20" step="1" value="14">
+    </div>
+
+    <div id="stats">
+      <div id="particleCount">particles: —</div>
+      <div id="fps">fps: —</div>
+    </div>
+  </div>
+
+  <div id="hint">Move your cursor over the canvas · drop an image to swap it</div>
+  <div id="glFail">Your browser doesn't support WebGL, so this demo can't run.<br>Try the canvas-2D version instead.</div>
+</div>
+
+<script>
+// Kept out of this file (was an inline base64 string) so the common
+// case — a real ?image= is always passed in production — never pays for
+// it; only the text-demo / broken-image fallback path fetches it.
+const DEFAULT_IMAGE_DATA_URL = "particle-reveal-default.png";
+</script>
+<script>
+(function(){
+  const canvas = document.getElementById('glCanvas');
+  const stage = document.getElementById('stage');
+
+  // Parsed early (before context creation).
+  const initQs = new URLSearchParams(location.search);
+  // Skips the duotone remap entirely and uses the source pixel's actual
+  // color — the duotone system is great for single-hue line art but wrong
+  // for something like a flag where red vs. navy is the point.
+  const IS_RAW_COLOR = initQs.get('rawcolor') === '1';
+  // Fraction of the container the image is scaled to fill (default matches
+  // the original hover-box behavior); ?fit=0.98 for a near-edge-to-edge
+  // background use instead of a centered box.
+  const FIT_FRACTION = parseFloat(initQs.get('fit')) || 0.85;
+  // Scale up until the image fully covers the container (may overflow one
+  // axis, clipped by the page's overflow-hidden) instead of the default
+  // "contain" behavior — for filling a section edge-to-edge regardless of
+  // the source image's own aspect ratio.
+  const IS_COVER_FIT = initQs.get('cover') === '1';
+  // Same proven trick as the default navy look, just parameterized: an
+  // opaque canvas whose clear color (and duotone dark end) matches the
+  // *local* page background it sits on, so it blends in instead of reading
+  // as a separate box — no real canvas transparency involved, which is
+  // where the glitching came from (alpha:true + non-premultiplied blending
+  // is a known-flaky combination across browsers/GPUs).
+  const bgHex = initQs.get('bg');
+  const BG_COLOR = bgHex && /^[0-9a-fA-F]{6}$/.test(bgHex)
+    ? [parseInt(bgHex.slice(0,2),16)/255, parseInt(bgHex.slice(2,4),16)/255, parseInt(bgHex.slice(4,6),16)/255]
+    : [0.039, 0.098, 0.216];
+
+  const glCtxOpts = { antialias: true, alpha: false, premultipliedAlpha: false };
+  const gl = canvas.getContext('webgl', glCtxOpts) || canvas.getContext('experimental-webgl', glCtxOpts);
+
+  if (!gl){
+    document.getElementById('glFail').style.display = 'flex';
+    return;
+  }
+
+  // ---- controls ----
+  const els = {
+    density: document.getElementById('density'),
+    scatter: document.getElementById('scatter'),
+    wind:    document.getElementById('wind'),
+    radius:  document.getElementById('radius'),
+    ease:    document.getElementById('ease'),
+    size:    document.getElementById('size'),
+    drift:   document.getElementById('drift'),
+    depth3d: document.getElementById('depth3d'),
+  };
+  const valEls = {
+    density: document.getElementById('densityVal'),
+    scatter: document.getElementById('scatterVal'),
+    wind:    document.getElementById('windVal'),
+    radius:  document.getElementById('radiusVal'),
+    ease:    document.getElementById('easeVal'),
+    size:    document.getElementById('sizeVal'),
+    drift:   document.getElementById('driftVal'),
+    depth3d: document.getElementById('depth3dVal'),
+  };
+  function syncLabels(){
+    valEls.density.textContent = els.density.value;
+    valEls.scatter.textContent = els.scatter.value + 'px';
+    valEls.wind.textContent    = els.wind.value + 'px';
+    valEls.radius.textContent  = els.radius.value + 'px';
+    valEls.ease.textContent    = els.ease.value;
+    valEls.size.textContent    = els.size.value + 'px';
+    valEls.drift.textContent   = els.drift.value + 'px';
+    valEls.depth3d.textContent = els.depth3d.value;
+  }
+  syncLabels();
+
+  let params = {
+    density: +els.density.value,
+    scatter: +els.scatter.value,
+    wind:    +els.wind.value,
+    radius:  +els.radius.value,
+    ease:    +els.ease.value,
+    size:    +els.size.value,
+    drift:   +els.drift.value,
+    depth3d: +els.depth3d.value / 10, // normalize slider 0-20 to ~0-2 multiplier
+  };
+  Object.keys(els).forEach(k=>{
+    els[k].addEventListener('input', ()=>{
+      syncLabels();
+      params.density = +els.density.value;
+      params.scatter = +els.scatter.value;
+      params.wind    = +els.wind.value;
+      params.radius  = +els.radius.value;
+      params.ease    = +els.ease.value;
+      params.size    = +els.size.value;
+      params.drift   = +els.drift.value;
+      params.depth3d = +els.depth3d.value / 10;
+      if (document.activeElement === els.density) {
+        rebuildFromCurrentSource();
+      } else if (document.activeElement === els.scatter || document.activeElement === els.wind) {
+        regenerateScatter();
+      }
+    });
+  });
+  document.getElementById('rescatterBtn').addEventListener('click', ()=> regenerateScatter());
+  document.getElementById('textDemoBtn').addEventListener('click', ()=> buildFromText('DREAM'));
+
+  // ---- sizing ----
+  let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+  function resizeCanvas(){
+    W = stage.clientWidth;
+    H = stage.clientHeight;
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  window.addEventListener('resize', ()=>{ resizeCanvas(); rebuildFromCurrentSource(); });
+
+  // ---- shader program ----
+  const VERT_SRC = `
+    attribute vec2 aHome;
+    attribute vec2 aScatter;
+    attribute vec3 aColor;
+    attribute float aAlpha;
+    attribute float aSeed;
+    attribute float aSizeRand;
+    attribute float aDepth;
+
+    uniform vec2 uResolution;
+    uniform vec2 uMouse;
+    uniform float uRadius;
+    uniform float uTime;
+    uniform float uDrift;
+    uniform float uPointSize;
+    uniform float uDpr;
+    uniform float uDepthStrength;
+    uniform vec2 uImageMin;
+    uniform vec2 uImageMax;
+    uniform vec3 uDuotoneLight;
+    uniform vec3 uDuotoneDark;
+    uniform float uRawColor;
+
+    varying vec3 vColor;
+    varying float vAlpha;
+    varying float vPull;
+    varying float vEdgeFalloff;
+    varying float vDepth;
+
+    void main(){
+      vec2 driftOff = vec2(
+        sin(uTime * 0.6 + aSeed),
+        cos(uTime * 0.5 + aSeed * 1.3)
+      ) * uDrift * (0.7 + 0.6 * aSizeRand);
+
+      vec2 scatteredPos = aHome + aScatter + driftOff;
+      // A resolved particle keeps a little idle drift rather than freezing
+      // dead still, so the settled image still shimmers faintly — kept
+      // small so the resolved image reads sharp rather than soft/blurred.
+      vec2 resolvedPos = aHome + driftOff * 0.06;
+
+      // Distance-based reveal: full resolve inside radius*0.18 of the
+      // cursor, smooth cubic falloff out to radius, nothing beyond it.
+      // uMouse is already eased toward the real cursor in JS (and eases
+      // to a far off-screen point when the pointer leaves the canvas), so
+      // this alone handles the "fade back out" case with no extra branch.
+      float dist = distance(aHome, uMouse);
+      float fullR = uRadius * 0.18;
+      float pull = 1.0 - smoothstep(fullR, uRadius, dist);
+
+      vec2 finalPos = mix(scatteredPos, resolvedPos, pull);
+
+      // Pop toward viewer: displaced radially outward from the cursor,
+      // peaking mid-transition — reads as sand mounding up right where
+      // the reveal boundary currently sits.
+      float bulge = pull * (1.0 - pull) * 4.0;
+      vec2 diff = aHome - uMouse;
+      float dlen = length(diff);
+      vec2 radialDir = dlen > 0.0001 ? diff / dlen : vec2(0.0);
+      finalPos += radialDir * bulge * 14.0 * uDepthStrength;
+
+      vec2 clip = (finalPos / uResolution) * 2.0 - 1.0;
+      clip.y = -clip.y;
+
+      gl_Position = vec4(clip, 0.0, 1.0);
+
+      // Grain-size variety while scattered (some particles are just bigger
+      // sand grains, near/far dust), converging to a clean uniform size as
+      // a particle resolves, plus the pop-toward-viewer size boost. The
+      // depth range is pushed hard here — near particles read distinctly
+      // larger than far ones so the field has real volume, not just a flat
+      // texture of same-size dots.
+      float scatteredSizeMul = mix(0.45, 2.0, aSizeRand);
+      float scatteredDepthMul = 1.0 + aDepth * 0.9 * uDepthStrength;
+      float sizeVariety = mix(scatteredSizeMul * scatteredDepthMul, 1.0, pull);
+      float sizeBoost = 1.0 + pull * 0.3 + bulge * 0.5 * uDepthStrength;
+      gl_PointSize = uPointSize * uDpr * sizeVariety * sizeBoost;
+
+      // Duotone, luminance-driven: the source pixel's actual hue is
+      // discarded, only its brightness maps through the navy->cream ramp.
+      float lum = dot(aColor, vec3(0.299, 0.587, 0.114));
+      vec3 duo = mix(uDuotoneDark, uDuotoneLight, lum);
+      vColor = mix(duo, aColor, uRawColor);
+      vAlpha = aAlpha;
+      vPull = pull;
+      vDepth = aDepth;
+
+      // Fades scattered dust out near the source image's own bounding-box
+      // edges, applied only while unresolved (see FRAG_SRC) — otherwise a
+      // dense line-art image reads as a filled rectangle once blurred by
+      // scatter, instead of tracing the actual figure.
+      vec2 imgSize = max(uImageMax - uImageMin, vec2(1.0));
+      vec2 uvn = (aHome - uImageMin) / imgSize;
+      float edgeDist = min(min(uvn.x, 1.0 - uvn.x), min(uvn.y, 1.0 - uvn.y));
+      vEdgeFalloff = smoothstep(0.0, 0.4, edgeDist);
+    }
+  `;
+
+  const FRAG_SRC = `
+    precision mediump float;
+    varying vec3 vColor;
+    varying float vAlpha;
+    varying float vPull;
+    varying float vEdgeFalloff;
+    varying float vDepth;
+
+    void main(){
+      vec2 c = gl_PointCoord - vec2(0.5);
+      float d = length(c);
+      if (d > 0.5) discard;
+      float edge = smoothstep(0.5, 0.4, d);
+
+      // Depth cue so the field reads as a volume popping off the page
+      // instead of a flat texture: particles nearer the viewer (vDepth -> 1)
+      // are brighter and more opaque, farther ones (vDepth -> -1) recede
+      // into haze. Eases out at full resolve so the resolved artwork still
+      // reads as one clean, evenly-lit image rather than mottled.
+      float depthLit = mix(0.62, 1.4, (vDepth + 1.0) * 0.5);
+      float depthAlpha = mix(0.72, 1.2, (vDepth + 1.0) * 0.5);
+      vec3 lit = min(vColor * mix(depthLit, 1.0, vPull), vec3(1.0));
+
+      // Brightness otherwise comes only from the resolve amount itself — no
+      // cursor-tied glow/hotspot — so revealed regions light up evenly.
+      // The edge falloff only applies while scattered — resolved (pull=1)
+      // shows the true artwork at full alpha, edges included.
+      float alpha = vAlpha * edge * mix(0.4 * vEdgeFalloff, 1.0, vPull) * mix(depthAlpha, 1.0, vPull);
+      gl_FragColor = vec4(lit, alpha);
+    }
+  `;
+
+  function compileShader(type, src){
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)){
+      console.error(gl.getShaderInfoLog(sh));
+      throw new Error('Shader compile failed');
+    }
+    return sh;
+  }
+  const vertShader = compileShader(gl.VERTEX_SHADER, VERT_SRC);
+  const fragShader = compileShader(gl.FRAGMENT_SHADER, FRAG_SRC);
+  const program = gl.createProgram();
+  gl.attachShader(program, vertShader);
+  gl.attachShader(program, fragShader);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)){
+    console.error(gl.getProgramInfoLog(program));
+    throw new Error('Program link failed');
+  }
+  gl.useProgram(program);
+
+  const loc = {
+    aHome: gl.getAttribLocation(program, 'aHome'),
+    aScatter: gl.getAttribLocation(program, 'aScatter'),
+    aColor: gl.getAttribLocation(program, 'aColor'),
+    aAlpha: gl.getAttribLocation(program, 'aAlpha'),
+    aSeed: gl.getAttribLocation(program, 'aSeed'),
+    aSizeRand: gl.getAttribLocation(program, 'aSizeRand'),
+    aDepth: gl.getAttribLocation(program, 'aDepth'),
+    uResolution: gl.getUniformLocation(program, 'uResolution'),
+    uMouse: gl.getUniformLocation(program, 'uMouse'),
+    uRadius: gl.getUniformLocation(program, 'uRadius'),
+    uTime: gl.getUniformLocation(program, 'uTime'),
+    uDrift: gl.getUniformLocation(program, 'uDrift'),
+    uPointSize: gl.getUniformLocation(program, 'uPointSize'),
+    uDpr: gl.getUniformLocation(program, 'uDpr'),
+    uDepthStrength: gl.getUniformLocation(program, 'uDepthStrength'),
+    uImageMin: gl.getUniformLocation(program, 'uImageMin'),
+    uImageMax: gl.getUniformLocation(program, 'uImageMax'),
+    uDuotoneLight: gl.getUniformLocation(program, 'uDuotoneLight'),
+    uDuotoneDark: gl.getUniformLocation(program, 'uDuotoneDark'),
+    uRawColor: gl.getUniformLocation(program, 'uRawColor'),
+  };
+
+  const bufHome = gl.createBuffer();
+  const bufScatter = gl.createBuffer();
+  const bufColor = gl.createBuffer();
+  const bufAlpha = gl.createBuffer();
+  const bufSeed = gl.createBuffer();
+  const bufSizeRand = gl.createBuffer();
+  const bufDepth = gl.createBuffer();
+
+  // Standard alpha blending, not additive — additive blows out to solid
+  // white wherever densely-packed particles overlap.
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.disable(gl.DEPTH_TEST);
+
+  // ---- particle data ----
+  let particleCount = 0;
+  let homeArr = null, scatterArr = null, colorArr = null, alphaArr = null, seedArr = null;
+  let currentSource = null;
+  // Bounding box the current source image was drawn into, used to fade
+  // scattered dust out near the image's own edges (see uImageMin/uImageMax
+  // in the shader) so idle particles trace the figure instead of blurring
+  // into a filled rectangle.
+  let imageMin = { x: 0, y: 0 };
+  let imageMax = { x: 0, y: 0 };
+
+  // Default cream — the original, unchanged look for every pillar unless
+  // overridden via ?tint=RRGGBB (see init, below).
+  let duotoneLight = [0.85, 0.80, 0.70];
+
+  function sampleFromImageData(imgData, iw, ih, offsetX, offsetY, step){
+    const out = [];
+    const data = imgData.data;
+    for (let y = 0; y < ih; y += step){
+      for (let x = 0; x < iw; x += step){
+        const idx = (y * iw + x) * 4;
+        const a = data[idx+3];
+        if (a < 40) continue;
+        out.push({
+          hx: offsetX + x,
+          hy: offsetY + y,
+          r: data[idx]/255, g: data[idx+1]/255, b: data[idx+2]/255,
+          a: a/255,
+        });
+      }
+    }
+    return out;
+  }
+
+  const MAX_PARTICLES = 500000; // WebGL point rendering scales well; this only guards against pathological cases (huge screen + minimum Density step)
+  function capParticles(points, cap){
+    if (points.length <= cap) return points;
+    const n = points.length;
+    for (let i=0;i<cap;i++){
+      const j = i + Math.floor(Math.random()*(n-i));
+      const tmp = points[i]; points[i] = points[j]; points[j] = tmp;
+    }
+    return points.slice(0, cap);
+  }
+
+  function uploadParticles(points){
+    points = capParticles(points, MAX_PARTICLES);
+    particleCount = points.length;
+    homeArr = new Float32Array(particleCount * 2);
+    scatterArr = new Float32Array(particleCount * 2);
+    colorArr = new Float32Array(particleCount * 3);
+    alphaArr = new Float32Array(particleCount);
+    seedArr = new Float32Array(particleCount);
+    const sizeRandArr = new Float32Array(particleCount);
+    const depthArr = new Float32Array(particleCount);
+
+    for (let i=0;i<particleCount;i++){
+      const p = points[i];
+      homeArr[i*2] = p.hx; homeArr[i*2+1] = p.hy;
+      colorArr[i*3] = p.r; colorArr[i*3+1] = p.g; colorArr[i*3+2] = p.b;
+      alphaArr[i] = p.a;
+      seedArr[i] = Math.random() * Math.PI * 2;
+      // skew toward small grains with occasional larger ones, like real sand
+      sizeRandArr[i] = Math.pow(Math.random(), 1.6);
+      depthArr[i] = Math.random() * 2 - 1; // -1 (far) .. 1 (near)
+    }
+    regenerateScatter();
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufColor);
+    gl.bufferData(gl.ARRAY_BUFFER, colorArr, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufAlpha);
+    gl.bufferData(gl.ARRAY_BUFFER, alphaArr, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufSeed);
+    gl.bufferData(gl.ARRAY_BUFFER, seedArr, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufHome);
+    gl.bufferData(gl.ARRAY_BUFFER, homeArr, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufSizeRand);
+    gl.bufferData(gl.ARRAY_BUFFER, sizeRandArr, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufDepth);
+    gl.bufferData(gl.ARRAY_BUFFER, depthArr, gl.STATIC_DRAW);
+
+    document.getElementById('particleCount').textContent = 'particles: ' + particleCount.toLocaleString();
+  }
+
+  // Idle dust isn't a symmetric cloud — a constant directional bias makes
+  // it read as a comet-tail/blown-sand plume instead.
+  const WIND_DIR = { x: -0.5, y: 0.87 };
+  function regenerateScatter(){
+    if (!homeArr) return;
+    for (let i=0;i<particleCount;i++){
+      const ang = Math.random() * Math.PI * 2;
+      // Unbounded exponential falloff instead of a hard-capped disk: most
+      // particles land close to home, a long tail drifts much further.
+      // A hard max radius pads the image's rectangular bounds into a clean,
+      // uniform blob — this frays the edge into something irregular instead.
+      const dist = -Math.log(1 - Math.random()) * params.scatter * 0.6;
+      const streamT = Math.pow(Math.random(), 2.2); // most particles short tail, a few stream much further
+      scatterArr[i*2]   = Math.cos(ang) * dist + WIND_DIR.x * params.wind * streamT;
+      scatterArr[i*2+1] = Math.sin(ang) * dist + WIND_DIR.y * params.wind * streamT;
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufScatter);
+    gl.bufferData(gl.ARRAY_BUFFER, scatterArr, gl.DYNAMIC_DRAW);
+  }
+
+  function buildFromText(text){
+    currentSource = { type:'text', text };
+    resizeCanvas();
+    const off = document.createElement('canvas');
+    off.width = W; off.height = H;
+    const octx = off.getContext('2d');
+    octx.clearRect(0,0,W,H);
+    const fontSize = Math.min(W,H) * 0.22;
+    octx.font = `900 ${fontSize}px -apple-system, Helvetica, Arial, sans-serif`;
+    octx.textAlign = 'center';
+    octx.textBaseline = 'middle';
+    const grad = octx.createLinearGradient(0,0,W,H);
+    grad.addColorStop(0, '#f5f0e6');
+    grad.addColorStop(0.5, '#d8cdb8');
+    grad.addColorStop(1, '#c9a876');
+    octx.fillStyle = grad;
+    octx.fillText(text, W/2, H/2);
+
+    imageMin = { x: 0, y: 0 };
+    imageMax = { x: W, y: H };
+    const imgData = octx.getImageData(0,0,W,H);
+    const pts = sampleFromImageData(imgData, W, H, 0, 0, params.density);
+    uploadParticles(pts);
+  }
+
+  function buildFromImage(img){
+    currentSource = { type:'image', img };
+    resizeCanvas();
+    const maxW = W * FIT_FRACTION, maxH = H * FIT_FRACTION;
+    let scale = IS_COVER_FIT
+      ? Math.max(maxW / img.width, maxH / img.height)
+      : Math.min(maxW / img.width, maxH / img.height, 4);
+    const dw = img.width * scale, dh = img.height * scale;
+    const dx = (W - dw)/2, dy = (H - dh)/2;
+    imageMin = { x: dx, y: dy };
+    imageMax = { x: dx + dw, y: dy + dh };
+
+    // Sample at a higher internal resolution than the on-screen display
+    // size, then shrink the resulting positions back down to fit — at
+    // Density 1 this is what actually buys more/finer particles, since
+    // sampling "every pixel" of a small display-sized canvas caps out fast.
+    const OVERSAMPLE = 1.35;
+    const sw = Math.max(1, Math.round(dw * OVERSAMPLE));
+    const sh = Math.max(1, Math.round(dh * OVERSAMPLE));
+    const off = document.createElement('canvas');
+    off.width = sw;
+    off.height = sh;
+    const octx = off.getContext('2d');
+    octx.drawImage(img, 0, 0, sw, sh);
+
+    const imgData = octx.getImageData(0, 0, sw, sh);
+    const pts = sampleFromImageData(imgData, sw, sh, 0, 0, params.density);
+    for (const p of pts) {
+      p.hx = dx + p.hx / OVERSAMPLE;
+      p.hy = dy + p.hy / OVERSAMPLE;
+    }
+    uploadParticles(pts);
+  }
+
+  function rebuildFromCurrentSource(){
+    if (!currentSource) return;
+    if (currentSource.type === 'text') buildFromText(currentSource.text);
+    else if (currentSource.type === 'image') buildFromImage(currentSource.img);
+  }
+
+  // ---- file upload / drag&drop ----
+  document.getElementById('fileInput').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = ()=>{ buildFromImage(img); URL.revokeObjectURL(url); };
+    img.src = url;
+  });
+  canvas.addEventListener('dragover', (e)=> e.preventDefault());
+  canvas.addEventListener('drop', (e)=>{
+    e.preventDefault();
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = ()=>{ buildFromImage(img); URL.revokeObjectURL(url); };
+    img.src = url;
+  });
+
+  let defaultImg = null;
+  function loadDefaultImage(onReady){
+    if (typeof DEFAULT_IMAGE_DATA_URL === 'undefined' || !DEFAULT_IMAGE_DATA_URL){
+      onReady(null);
+      return;
+    }
+    const img = new Image();
+    img.onload = ()=>{ defaultImg = img; onReady(img); };
+    img.onerror = ()=> onReady(null);
+    img.src = DEFAULT_IMAGE_DATA_URL;
+  }
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    if (defaultImg) buildFromImage(defaultImg);
+    else buildFromText('DREAM');
+  });
+
+  // ---- pointer tracking ----
+  let mouse = { x: -9999, y: -9999, active: false };
+  // Eased toward `mouse` every frame (see chaseEase below) rather than read
+  // raw — this is what gives the reveal boundary a fluid sweep instead of
+  // snapping frame-to-frame with the pointer.
+  let smoothedMouse = { x: -9999, y: -9999 };
+  let wasMouseActive = false;
+  canvas.addEventListener('mousemove', (e)=>{
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = e.clientX - rect.left;
+    mouse.y = e.clientY - rect.top;
+    mouse.active = true;
+  });
+  canvas.addEventListener('mouseleave', ()=>{ mouse.active = false; });
+  canvas.addEventListener('touchmove', (e)=>{
+    const t = e.touches[0];
+    if (!t) return;
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = t.clientX - rect.left;
+    mouse.y = t.clientY - rect.top;
+    mouse.active = true;
+    e.preventDefault();
+  }, {passive:false});
+  canvas.addEventListener('touchend', ()=>{ mouse.active = false; });
+
+  // ---- render loop ----
+  let lastT = performance.now();
+  let fpsAcc = 0, fpsFrames = 0;
+  let startT = performance.now();
+
+  function frame(t){
+    const dt = Math.min(48, t - lastT);
+    // Uncapped (but sanity-clamped) elapsed time for the cursor-chase easing
+    // below. Reusing the capped `dt` here was an earlier bug: on a slow
+    // frame the chase would fall further behind real time every frame and
+    // could appear to stall for seconds. This always catches up.
+    const easeDt = Math.min(1000, Math.max(0, t - lastT));
+    lastT = t;
+    fpsAcc += dt; fpsFrames++;
+    if (fpsAcc > 500){
+      document.getElementById('fps').textContent = 'fps: ' + Math.round(fpsFrames * 1000 / fpsAcc);
+      fpsAcc = 0; fpsFrames = 0;
+    }
+
+    // On entry, snap straight to the real cursor position instead of easing
+    // in from the off-screen sentinel — that gap is thousands of px, and
+    // even a fast chase takes a beat to close a gap that size, which read
+    // as "ignoring the cursor for a moment." The smoothing is for making
+    // in-canvas movement fluid, not for delaying the initial pickup.
+    if (mouse.active && !wasMouseActive) {
+      smoothedMouse.x = mouse.x;
+      smoothedMouse.y = mouse.y;
+    }
+    wasMouseActive = mouse.active;
+
+    // When the cursor leaves the canvas the target becomes a far off-screen
+    // point, so everything eases back to fully scattered through the same
+    // smoothing rather than freezing or cutting off abruptly.
+    const targetX = mouse.active ? mouse.x : -9999;
+    const targetY = mouse.active ? mouse.y : -9999;
+    const chaseTau = Math.max(0.03, 0.62 - params.ease * 0.028); // seconds, "Resolve smoothness" slider
+    const chaseEase = 1 - Math.exp(-(easeDt / 1000) / chaseTau);
+    smoothedMouse.x += (targetX - smoothedMouse.x) * chaseEase;
+    smoothedMouse.y += (targetY - smoothedMouse.y) * chaseEase;
+
+    gl.clearColor(BG_COLOR[0], BG_COLOR[1], BG_COLOR[2], 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    if (particleCount > 0){
+      gl.useProgram(program);
+
+      gl.uniform2f(loc.uResolution, W, H);
+      gl.uniform2f(loc.uMouse, smoothedMouse.x, smoothedMouse.y);
+      gl.uniform1f(loc.uRadius, params.radius);
+      gl.uniform1f(loc.uTime, (t - startT) / 1000);
+      gl.uniform1f(loc.uDrift, params.drift);
+      gl.uniform1f(loc.uPointSize, params.size);
+      gl.uniform1f(loc.uDpr, DPR);
+      gl.uniform1f(loc.uDepthStrength, params.depth3d);
+      gl.uniform2f(loc.uImageMin, imageMin.x, imageMin.y);
+      gl.uniform2f(loc.uImageMax, imageMax.x, imageMax.y);
+      gl.uniform3f(loc.uDuotoneLight, duotoneLight[0], duotoneLight[1], duotoneLight[2]);
+      gl.uniform3f(loc.uDuotoneDark, BG_COLOR[0], BG_COLOR[1], BG_COLOR[2]);
+      gl.uniform1f(loc.uRawColor, IS_RAW_COLOR ? 1.0 : 0.0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, bufHome);
+      gl.enableVertexAttribArray(loc.aHome);
+      gl.vertexAttribPointer(loc.aHome, 2, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, bufSizeRand);
+      gl.enableVertexAttribArray(loc.aSizeRand);
+      gl.vertexAttribPointer(loc.aSizeRand, 1, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, bufDepth);
+      gl.enableVertexAttribArray(loc.aDepth);
+      gl.vertexAttribPointer(loc.aDepth, 1, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, bufScatter);
+      gl.enableVertexAttribArray(loc.aScatter);
+      gl.vertexAttribPointer(loc.aScatter, 2, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, bufColor);
+      gl.enableVertexAttribArray(loc.aColor);
+      gl.vertexAttribPointer(loc.aColor, 3, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, bufAlpha);
+      gl.enableVertexAttribArray(loc.aAlpha);
+      gl.vertexAttribPointer(loc.aAlpha, 1, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, bufSeed);
+      gl.enableVertexAttribArray(loc.aSeed);
+      gl.vertexAttribPointer(loc.aSeed, 1, gl.FLOAT, false, 0, 0);
+
+      gl.drawArrays(gl.POINTS, 0, particleCount);
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  // ---- init ----
+  resizeCanvas();
+
+  // Embed mode: the dev control panel stays hidden (CSS default) unless
+  // ?debug=1, and a specific image loads via ?image=/path/to.png instead of
+  // the built-in demo placeholder. This lets one HTML file serve every
+  // pillar's reveal — the React wrapper just points `image` at a different
+  // asset.
+  const qs = new URLSearchParams(location.search);
+  if (qs.get('debug') === '1') {
+    document.getElementById('panel').style.display = '';
+    document.getElementById('hint').style.display = '';
+  }
+  const tintHex = qs.get('tint');
+  if (tintHex && /^[0-9a-fA-F]{6}$/.test(tintHex)) {
+    duotoneLight = [
+      parseInt(tintHex.slice(0, 2), 16) / 255,
+      parseInt(tintHex.slice(2, 4), 16) / 255,
+      parseInt(tintHex.slice(4, 6), 16) / 255,
+    ];
+  }
+  // Default hover radius (480px) was tuned against the small ~500px pillar
+  // boxes. On a much bigger canvas (e.g. a full-section background) that
+  // same absolute radius covers a tiny fraction of the area, so the reveal
+  // barely seems to track the cursor at all — ?radius=NNN scales it up.
+  const radiusOverride = parseFloat(qs.get('radius'));
+  if (radiusOverride > 0) {
+    params.radius = radiusOverride;
+  }
+  const customImageSrc = qs.get('image');
+  if (customImageSrc) {
+    const img = new Image();
+    img.onload = () => { defaultImg = img; buildFromImage(img); };
+    img.onerror = () => {
+      loadDefaultImage((img)=>{ if (img) buildFromImage(img); else buildFromText('DREAM'); });
+    };
+    img.src = customImageSrc;
+  } else {
+    loadDefaultImage((img)=>{
+      if (img) buildFromImage(img);
+      else buildFromText('DREAM');
+    });
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
